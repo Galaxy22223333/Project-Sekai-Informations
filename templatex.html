@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>世界计划：缤纷舞台 组合图集</title>
+    <style>
+        /* 搜索框样式 */
+        .search-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto 25px;
+            position: relative;
+        }
+        
+        #characterSearch {
+            width: 100%;
+            padding: 14px 20px;
+            padding-left: 50px;
+            font-size: 16px;
+            border: none;
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            outline: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        #characterSearch:focus {
+            background: rgba(255, 255, 255, 0.22);
+            box-shadow: 0 0 0 2px rgba(100, 180, 255, 0.5);
+        }
+        
+        #characterSearch::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 20px;
+        }
+        
+        /* 组合弹窗样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.9);
+            padding: 20px 0;
+        }
+        
+        .modal-content {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+            padding: 20px;
+        }
+        
+        /* 角色详情弹窗样式 */
+        .character-modal {
+            display: none;
+            position: fixed;
+            z-index: 2;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.95);
+            padding: 40px 0;
+        }
+        
+        .character-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: rgba(30, 30, 40, 0.8);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        
+        /* 组合卡片样式 - 添加高亮效果 */
+        .unit-card {
+            background: rgba(100, 100, 100, 0.54);
+            border-radius: 15px;
+            overflow: hidden;
+            width: 100%;
+            max-width: 700px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        /* 组合专属背景颜色 */
+        .unit-card[data-unit="leoneed"]::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(78, 110, 173, 0.8), rgba(62, 88, 125, 0.9));
+            z-index: 1;
+            border-radius: 15px;
+            transition: opacity 0.3s ease;
+            opacity: 0.7;
+        }
+
+        .unit-card[data-unit="mmj"]::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(78, 236, 98, 0.8), rgba(42, 209, 40, 0.9));
+            z-index: 1;
+            border-radius: 15px;
+            transition: opacity 0.3s ease;
+            opacity: 0.7;
+        }
+
+        .unit-card[data-unit="vbs"]::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(255, 94, 58, 0.8), rgba(210, 70, 40, 0.9));
+            z-index: 1;
+            border-radius: 15px;
+            transition: opacity 0.3s ease;
+            opacity: 0.7;
+        }
+
+        .unit-card[data-unit="wxs"]::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(255, 197, 0, 0.8), rgba(210, 162, 0, 0.9));
+            z-index: 1;
+            border-radius: 15px;
+            transition: opacity 0.3s ease;
+            opacity: 0.7;
+        }
+
+        .unit-card[data-unit="nightcord"]::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(155, 93, 255, 0.8), rgba(125, 65, 210, 0.9));
+            z-index: 1;
+            border-radius: 15px;
+            transition: opacity 0.3s ease;
+            opacity: 0.7;
+        }
+
+        /* 悬停时降低不透明度，使图片更清晰 */
+        .unit-card:hover::before {
+            opacity: 0.5;
+        }
+        
+        .unit-card.highlighted {
+            border: 3px solid #ffdd40;
+            box-shadow: 0 0 25px rgba(255, 221, 64, 0.6);
+            transform: scale(1.03);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        /* 高亮状态时提高颜色饱和度 */
+        .unit-card.highlighted::before {
+            opacity: 0.85;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 25px rgba(255, 221, 64, 0.6); }
+            50% { box-shadow: 0 0 35px rgba(255, 221, 64, 0.8); }
+            100% { box-shadow: 0 0 25px rgba(255, 221, 64, 0.6); }
+        }
+        
+        .unit-card.highlighted::after {
+            content: "✓";
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 30px;
+            height: 30px;
+            background: #ffdd40;
+            color: #333;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+            box-shadow: 0 0 10px rgba(255, 221, 64, 0.9);
+            z-index: 3;
+        }
+        
+        .unit-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.4);
+        }
+        
+        .unit-header {
+            padding: 15px 20px;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            color: white;
+            background: rgba(0, 0, 0, 0.5);
+            position: relative;
+            z-index: 3;
+        }
+        
+        .unit-image {
+            width: 100%;
+            display: block;
+            max-height: 400px;
+            object-fit: cover;
+            position: relative;
+            z-index: 2;
+        }
+        
+        /* 角色详情卡片样式 */
+        .character-card {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .character-card:hover {
+            transform: scale(1.02);
+            background: rgba(255, 255, 255, 0.12);
+        }
+        
+        .character-name {
+            padding: 15px 20px;
+            font-size: 22px;
+            font-weight: bold;
+            color: #fff;
+            background: rgba(0, 0, 0, 0.4);
+            text-align: center;
+        }
+        
+        .character-image {
+            width: 100%;
+            max-height: 350px;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .character-description {
+            padding: 20px;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #e0e0ff;
+            background: rgba(20, 20, 30, 0.7);
+        }
+        
+        /* 关闭按钮样式 */
+        .close {
+            position: absolute;
+            top: 25px;
+            right: 30px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s;
+            z-index: 10;
+        }
+        
+        .close:hover {
+            color: #ff6b6b;
+        }
+        
+        /* 返回按钮样式 */
+        .back-button {
+            position: absolute;
+            top: 25px;
+            left: 30px;
+            color: #f1f1f1;
+            font-size: 20px;
+            cursor: pointer;
+            transition: color 0.3s;
+            background: rgba(100, 100, 200, 0.5);
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 10;
+        }
+        
+        .back-button:hover {
+            background: rgba(120, 120, 220, 0.7);
+        }
+        
+        /* 页脚样式 */
+        .footer {
+            text-align: center;
+            color: #aaa;
+            padding: 20px;
+            font-size: 14px;
+        }
+        
+        /* 组合标题样式 */
+        .unit-title {
+            text-align: center;
+            font-size: 32px;
+            color: #fff;
+            margin-bottom: 30px;
+            text-shadow: 0 0 10px rgba(100, 150, 255, 0.7);
+        }
+        
+        /* 提示信息样式 */
+        .hint-message {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            text-align: center;
+            margin-top: 8px;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+        
+        /* 无结果提示 */
+        .no-results {
+            text-align: center;
+            color: #ff9d9d;
+            font-size: 18px;
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(100, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 组合弹窗 -->
+    <div id="unitsModal" class="modal">
+        <span class="close">&times;</span>
+        
+        <!-- 搜索框 -->
+        <div class="search-container">
+            <div class="search-icon">🔍</div>
+            <input type="text" id="characterSearch" placeholder="输入角色名称，高亮所在组合...">
+        </div>
+        <div class="hint-message">例如: "星乃一歌"、"宵崎奏"</div>
+        <div id="searchResults"></div>
+        
+        <div class="modal-content">
+            <!-- Leo/need -->
+            <div class="unit-card" data-unit="leoneed">
+                <div class="unit-header">Leo/need</div>
+                <img class="unit-image" src="https://static.wikia.nocookie.net/projectsekai/images/7/7c/Leoneedlogo.png/revision/latest?cb=20200213204008" alt="Leo/need 组合">
+            </div>
+            
+            <!-- MORE MORE JUMP! -->
+            <div class="unit-card" data-unit="mmj">
+                <div class="unit-header">MORE MORE JUMP!</div>
+                <img class="unit-image" src="https://static.wikia.nocookie.net/projectsekai/images/a/a1/Moremorejumplogo.png/revision/latest?cb=20200214145616" alt="MORE MORE JUMP! 组合">
+            </div>
+            
+            <!-- Vivid BAD SQUAD -->
+            <div class="unit-card" data-unit="vbs">
+                <div class="unit-header">Vivid BAD SQUAD</div>
+                <img class="unit-image" src="https://static.wikia.nocookie.net/projectsekai/images/4/4a/Vividbadsquadlogo.png/revision/latest?cb=20200214175338" alt="Vivid BAD SQUAD 组合">
+            </div>
+            
+            <!-- Wonderlands × Showtime -->
+            <div class="unit-card" data-unit="wxs">
+                <div class="unit-header">ワンダーランズ×ショウタイム</div>
+                <img class="unit-image" src="https://static.wikia.nocookie.net/projectsekai/images/6/63/Wonderlandsxswowtimelogo.png/revision/latest?cb=20200214183406" alt="Wonderlands × Showtime 组合">
+            </div>
+            
+            <!-- Meeting at 25:00. -->
+            <div class="unit-card" data-unit="nightcord">
+                <div class="unit-header">25時、ナイトコードで。</div>
+                <img class="unit-image" src="https://static.wikia.nocookie.net/projectsekai/images/b/bd/25ji-logo.png/revision/latest?cb=20200214215513" alt="25時、ナイトコードで。 组合">
+            </div>
+        </div>
+        <div class="footer">《世界计划：缤纷舞台》组合图集</div>
+    </div>
+
+    <!-- 角色详情弹窗 -->
+    <div id="characterModal" class="character-modal">
+        <span class="close">&times;</span>
+        <div class="back-button">← 返回组合</div>
+        <div class="character-content">
+            <div class="unit-title" id="characterUnitTitle"></div>
+            <div id="characterContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        // 组合角色数据
+        const unitCharacters = {
+            leoneed: [
+                {
+                    name: "星乃一歌",
+                    image: "https://static.wikia.nocookie.net/projectsekai/images/b/b8/Brand_New_Style_%28Ichika%29.png/revision/latest/scale-to-width-down/1000?cb=20230930030732",
+                    description: "Leo/need的主唱和吉他手。性格认真负责，有时会过度担心。音乐风格以摇滚为主，歌词多表达青春期的困惑与成长。"
+                },
+                {
+                    name: "天马咲希",
+                    image: "https://static.wikia.nocookie.net/projectsekai/images/f/f4/Brand_New_Style_%28Saki%29.png/revision/latest/scale-to-width-down/1000?cb=20230930030732",
+                    description: "键盘手兼作曲担当。性格开朗活泼，是团队的开心果。擅长创作旋律感强的乐曲，音乐风格融合了流行和电子元素。"
+                },
+                {
+                    name: "望月穗波",
+                    image: "https://static.wikia.nocookie.net/projectsekai/images/8/81/Brand_New_Style_%28Honami%29.png/revision/latest/scale-to-width-down/1000?cb=20230930030732",
+                    description: "贝斯手。性格冷静沉着，是团队的稳定器。演奏风格扎实有力，注重节奏和低音的表现力。"
+                },
+                {
+                    name: "日野森志步",
+                    image: "https://static.wikia.nocookie.net/projectsekai/images/9/96/Brand_New_Style_%28Shiho%29.png/revision/latest/scale-to-width-down/1000?cb=20230930030731",
+                    description: "鼓手。性格直率，有时显得固执。节奏感极强，擅长复杂的鼓点编排，为乐队提供强大的节奏支撑。"
+                }
+            ],
+            mmj: [
+                {
+                    name: "花里实乃理",
+                    image: "https://static.wikia.nocookie.net/projectsekai/images/6/67/Brand_New_Style_%28Minori%29.png/revision/latest/scale-to-width-down/1000?cb=20230930030731",
+                    description: "MORE MORE JUMP!的队长和主唱。性格温柔但意志坚定，梦想是成为顶尖偶像。音色甜美清澈，舞蹈风格优雅流畅。"
+                },
+                {
+                    name: "桐谷遥",
+                    image: "https://static.wikia.nocookie.net/projectsekai/images/d/d0/Brand_New_Style_%28Haruka%29.png/revision/latest/scale-to-width-down/1000?cb=20230930030731",
+                    description: "主舞和编舞担当。曾学习芭蕾多年，舞蹈功底深厚。性格内向害羞，但在舞台上展现出强烈的表现力。"
+                },
+                {
+                    name: "桃井爱莉",
+                    image: "https://static.wikia.nocookie.net/projectsekai/images/c/c3/Brand_New_Style_%28Airi%29.png/revision/latest/scale-to-width-down/1000?cb=20230930030731",
+                    description: "主唱和形象设计。性格活泼外向，时尚感敏锐。擅长与粉丝互动，负责团队的社交媒体运营。"
+                },
+                {
+                    name: "日野森雫",
+                    image: "https://static.wikia.nocookie.net/projectsekai/images/4/47/Brand_New_Style_%28Shizuku%29.png/revision/latest/scale-to-width-down/1000?cb=20230930030731",
+                    description: "作曲和键盘担当。性格冷静理性，是团队的制作核心。创作风格多变，擅长将古典元素融入流行音乐中。"
+                }
+            ],
+            vbs: [
+                {
+                    name: "小豆泽心羽",
+                    image: "https://static.wikia.nocookie.net/projectsekai/images/c/c7/Brand_New_Style_%28Kohane%29.png/revision/latest/scale-to-width-down/1000?cb=20230930030731",
+                    description: "Vivid BAD SQUAD的主唱。性格直率热情，舞台感染力极强。擅长说唱和即兴表演，音乐风格以街头嘻哈为主。"
+                },
+                {
+                    name: "白石杏",
+                    image: "https://static.wikia.nocookie.net/projectsekai/images/6/67/Brand_New_Style_%28An%29.png/revision/latest/scale-to-width-down/1000?cb=20230930030731",
+                    description: "DJ和制作人。性格酷酷的但内心细腻。擅长电子音乐制作，将传统嘻哈与电子元素创新融合。"
+                },
+                {
+                    name: "东云彰人",
+                    image: "https://static.wikia.nocookie.net/projectsekai/images/b/b7/Brand_New_Style_%28Akito%29.png/revision/latest/scale-to-width-down/1000?cb=20230930030730",
+                    description: "主唱和编舞。舞蹈风格充满力量感，擅长霹雳舞和机械舞。歌词多表达都市青年的真实感受。"
+                },
+                {
+                    name: "青柳冬弥",
+                    image: "https://static.wikia.nocookie.net/projectsekai/images/1/1d/Brand_New_Style_%28Toya%29.png/revision/latest/scale-to-width-down/1000?cb=20230930030730",
+                    description: "制作人和键盘手。性格沉稳，音乐理论知识丰富。负责团队音乐制作的整体把控和编曲工作。"
+                }
+            ],
+            wxs: [
+                {
+                    name: "天马司",
+                    image: "https://static.wikia.nocookie.net/projectsekai/images/0/0f/Brand_New_Style_%28Tsukasa%29.png/revision/latest/scale-to-width-down/1000?cb=20230930030730",
+                    description: "Wonderlands × Showtime的队长和主演。性格夸张自信，梦想是创造最棒的舞台表演。擅长歌舞剧和即兴表演。"
+                },
+                {
+                    name: "凤笑梦",
+                    image: "https://static.wikia.nocookie.net/projectsekai/images/d/da/Brand_New_Style_%28Emu%29.png/revision/latest/scale-to-width-down/1000?cb=20230930030730",
+                    description: "主舞和编舞。身体柔韧性极佳，舞蹈风格梦幻唯美。性格天真烂漫，相信舞台魔法能带来幸福。"
+                },
+                {
+                    name: "草薙宁宁",
+                    image: "https://static.wikia.nocookie.net/projectsekai/images/d/db/Brand_New_Style_%28Nene%29.png/revision/latest/scale-to-width-down/1000?cb=20230930030729",
+                    description: "编剧和导演。性格冷静，负责团队所有演出的剧本创作。擅长将传统故事改编为现代舞台剧。"
+                },
+                {
+                    name: "神代类",
+                    image: "https://static.wikia.nocookie.net/projectsekai/images/e/e2/Brand_New_Style_%28Rui%29.png/revision/latest/scale-to-width-down/1000?cb=20230930030729",
+                    description: "舞台设计和特效师。机械天才，负责团队所有舞台装置和特效。性格神秘，总是带着面具。"
+                }
+            ],
+            nightcord: [
+                {
+                    name: "宵崎奏",
+                    image: "https://static.wikia.nocookie.net/projectsekai/images/6/66/Brand_New_Style_%28Kanade%29.png/revision/latest/scale-to-width-down/1000?cb=20230930030729",
+                    description: "25時、ナイトコードで。的作曲和主唱。只在深夜活动，音乐风格忧郁深邃。歌词多探讨孤独与自我认同的主题。"
+                },
+                {
+                    name: "朝比奈真冬",
+                    image: "https://static.wikia.nocookie.net/projectsekai/images/9/90/Brand_New_Style_%28Mafuyu%29.png/revision/latest/scale-to-width-down/1000?cb=20230930030729",
+                    description: "作词和主唱。声音空灵清澈，擅长创造富有诗意的歌词。性格疏离，只在虚拟世界与人交流。"
+                },
+                {
+                    name: "东云绘名",
+                    image: "https://static.wikia.nocookie.net/projectsekai/images/2/2e/Brand_New_Style_%28Ena%29.png/revision/latest/scale-to-width-down/1000?cb=20230930030729",
+                    description: "插画师和视觉设计。负责团队所有的视觉呈现和MV制作。艺术风格前卫抽象，充满象征意义。"
+                },
+                {
+                    name: "晓山瑞希",
+                    image: "https://static.wikia.nocookie.net/projectsekai/images/7/71/Brand_New_Style_%28Mizuki%29.png/revision/latest/scale-to-width-down/1000?cb=20230930030729",
+                    description: "程序员和制作人。开发了团队专用的音乐制作软件，负责所有技术实现和网络平台维护。"
+                }
+            ]
+        };
+
+        // 角色搜索功能
+        function searchCharacter() {
+            const searchInput = document.getElementById('characterSearch');
+            const searchTerm = searchInput.value.trim().toLowerCase();
+            const unitCards = document.querySelectorAll('.unit-card');
+            const searchResults = document.getElementById('searchResults');
+            
+            // 重置所有高亮效果
+            unitCards.forEach(card => {
+                card.classList.remove('highlighted');
+            });
+            
+            // 清空之前的结果提示
+            searchResults.innerHTML = '';
+            
+            // 如果搜索框为空，则不作处理
+            if (!searchTerm) return;
+            
+            let found = false;
+            
+            // 遍历所有组合，查找匹配的角色
+            for (const unitId in unitCharacters) {
+                const characters = unitCharacters[unitId];
+                
+                // 检查当前组合中是否有角色匹配
+                const characterMatch = characters.some(character => 
+                    character.name.toLowerCase().includes(searchTerm)
+                );
+                
+                // 如果找到匹配的角色，高亮对应的组合卡片
+                if (characterMatch) {
+                    const matchedCard = document.querySelector(`.unit-card[data-unit="${unitId}"]`);
+                    if (matchedCard) {
+                        matchedCard.classList.add('highlighted');
+                        found = true;
+                    }
+                }
+            }
+            
+            // 如果没有找到匹配的角色
+            if (!found) {
+                searchResults.innerHTML = '<div class="no-results">没有找到相关角色，请尝试其他名称！</div>';
+            }
+        }
+
+        // 页面加载完成后自动显示组合弹窗
+        document.addEventListener('DOMContentLoaded', function() {
+            var unitsModal = document.getElementById('unitsModal');
+            var characterModal = document.getElementById('characterModal');
+            var closeButtons = document.getElementsByClassName('close');
+            var backButton = document.querySelector('.back-button');
+            
+            // 显示组合弹窗
+            unitsModal.style.display = 'block';
+            
+            // 为组合卡片添加点击事件
+            var unitCards = document.querySelectorAll('.unit-card');
+            unitCards.forEach(function(card) {
+                card.addEventListener('click', function(event) {
+                    event.stopPropagation();
+                    var unitId = this.getAttribute('data-unit');
+                    showCharacterModal(unitId);
+                    
+                    // 关闭组合弹窗
+                    unitsModal.style.display = 'none';
+                });
+            });
+            
+            // 添加搜索输入框事件监听
+            const searchInput = document.getElementById('characterSearch');
+            searchInput.addEventListener('input', searchCharacter);
+            
+            // 点击关闭按钮关闭弹窗
+            for (var i = 0; i < closeButtons.length; i++) {
+                closeButtons[i].onclick = function() {
+                    unitsModal.style.display = 'none';
+                    characterModal.style.display = 'none';
+                }
+            }
+            
+            // 点击返回按钮
+            backButton.onclick = function() {
+                characterModal.style.display = 'none';
+                unitsModal.style.display = 'block';
+            }
+        });
+        
+        // 显示角色详情弹窗
+        function showCharacterModal(unitId) {
+            var characterModal = document.getElementById('characterModal');
+            var characterContainer = document.getElementById('characterContainer');
+            var unitTitle = document.getElementById('characterUnitTitle');
+            
+            // 设置组合标题
+            var unitName = "";
+            switch(unitId) {
+                case "leoneed": unitName = "Leo/need"; break;
+                case "mmj": unitName = "MORE MORE JUMP!"; break;
+                case "vbs": unitName = "Vivid BAD SQUAD"; break;
+                case "wxs": unitName = "Wonderlands × Showtime"; break;
+                case "nightcord": unitName = "25時、ナイトコードで。"; break;
+            }
+            unitTitle.textContent = unitName + " 成员介绍";
+            
+            // 清空容器
+            characterContainer.innerHTML = "";
+            
+            // 添加角色卡片
+            unitCharacters[unitId].forEach(function(character) {
+                var cardHTML = `
+                    <div class="character-card">
+                        <div class="character-name">${character.name}</div>
+                        <img class="character-image" src="${character.image}" alt="${character.name}">
+                        <div class="character-description">${character.description}</div>
+                    </div>
+                `;
+                characterContainer.innerHTML += cardHTML;
+            });
+            
+            // 显示弹窗
+            characterModal.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
