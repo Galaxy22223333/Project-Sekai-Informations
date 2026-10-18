@@ -1,9 +1,33 @@
 <!DOCTYPE html>
+<!--
+    Rework 版说明（基于 index.html，未改动原文件）
+    主要改动：
+      1. 事实修正：日野森志步班级 2-A → 2-B；星乃一歌代表色 #3366CC → #33AAEE；
+         VBS「街头街舞组合」→「街头音乐组合」；25时「地下音乐创作团体」→「网络音乐社团」；
+         爱莉「气压食品包装」、彰人「（以及狼）」等无官方依据的条目已删除；真冬担当改为「作词」。
+      2. 命名统一：作品名统一为官方简中名《初音未来：缤纷舞台》，副标题用官方英文名，
+         日文原名单独一行；组合名采用官方简中译名并保留日文原名小字。
+      3. 简介与档案同代：20 段简介改写为官方角色页 NOW（升学后）版本，与学年/身高数据一致。
+      4. 导航改为视图栈：从搜索结果直达详情后，返回会回到搜索结果而不是成员列表；
+         全局 ✕ 只出现在子页面；Esc / 返回按钮 / 焦点回位统一处理。
+      5. 搜索：支持组合别名（leo/need、mmj、vbs、wxs、nightcord、25时…）、生日、星座、
+         学年、代表色、简介全文；结果面板合并「无结果」提示；回车可定位到命中的组合卡片。
+      6. 排版：搜索命中角标移入头部（不再压住组合徽章）；清空按钮不再遮挡输入文字；
+         窄屏 Q 版改 2 列、长组合名折行；表格 hover 同时作用于表头；补充日文字体与
+         火狐滚动条样式。
+      7. 图片：详情立绘改 object-fit: contain（不再裁掉头脚）；角色卡按源图 1000×571
+         的横版比例取值（原先误用了 3:4 竖框，横图会被缩成中间一条）；
+         去掉三处空 src；补 loading="lazy" / decoding="async" / 尺寸占位；
+         图片加载失败有占位样式。
+      8. 可访问性：弹窗补 role="dialog" / aria-modal / 标题关联；快捷标签与 Q 版改为真按钮；
+         支持 prefers-reduced-motion。
+-->
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>世界计划：缤纷舞台 角色与组合图集</title>
+    <meta name="description" content="《初音未来：缤纷舞台》（HATSUNE MIKU: COLORFUL STAGE!）五位组合、二十位角色的非官方中文资料图集。">
+    <title>初音未来：缤纷舞台 · 角色与组合图集</title>
     <style>
         :root {
             --bg-dark: #12131c;
@@ -24,16 +48,32 @@
             padding: 0;
         }
 
+        [hidden] {
+            display: none !important;
+        }
+
+        img {
+            max-width: 100%;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB",
+                         "Microsoft YaHei", "Yu Gothic UI", "Yu Gothic", "Hiragino Sans",
+                         "Noto Sans JP", "Noto Sans SC", "WenQuanYi Micro Hei", sans-serif;
             background: radial-gradient(circle at 50% 10%, #1e2238 0%, #0d0f18 100%);
             color: var(--text-main);
             min-height: 100vh;
             line-height: 1.6;
             overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* 滚动条 */
+        html {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.25) rgba(0, 0, 0, 0.3);
+        }
+
+        /* 滚动条（WebKit） */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -49,7 +89,7 @@
             background: rgba(255, 255, 255, 0.4);
         }
 
-        /* 全局固定的右上角关闭/返回按钮：严格定位于视口右上角，旋转时零位移 */
+        /* 全局固定返回按钮：只在子页面出现，主界面隐藏 */
         .global-close-btn {
             position: fixed;
             top: 22px;
@@ -61,7 +101,7 @@
             background: rgba(30, 34, 52, 0.75);
             border: 1px solid rgba(255, 255, 255, 0.2);
             color: #f0f2ff;
-            display: flex;
+            display: none;
             align-items: center;
             justify-content: center;
             cursor: pointer;
@@ -70,6 +110,10 @@
             transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
             outline: none;
             padding: 0;
+        }
+
+        .global-close-btn.is-visible {
+            display: flex;
         }
 
         .global-close-btn svg {
@@ -88,6 +132,11 @@
             box-shadow: 0 6px 20px rgba(235, 65, 85, 0.5);
         }
 
+        .global-close-btn:focus-visible {
+            outline: 2px solid #ffdd40;
+            outline-offset: 3px;
+        }
+
         .global-close-btn:hover svg {
             transform: rotate(90deg);
         }
@@ -95,21 +144,40 @@
         /* 顶部大标题与说明 */
         .page-header {
             text-align: center;
-            padding: 30px 20px 10px;
+            padding: 34px 20px 10px;
         }
+
         .main-title {
-            font-size: 2.2rem;
+            font-size: clamp(1.35rem, 4.6vw, 2.2rem);
             font-weight: 800;
-            background: linear-gradient(135deg, #ffffff 20%, #a5c7ff 80%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 4px 20px rgba(0, 102, 255, 0.3);
             letter-spacing: 1px;
+            line-height: 1.25;
+            overflow-wrap: anywhere;
             margin-bottom: 6px;
+            color: #eaf2ff;
+            filter: drop-shadow(0 6px 20px rgba(80, 150, 255, 0.35));
         }
+
+        @supports ((background-clip: text) or (-webkit-background-clip: text)) {
+            .main-title {
+                background: linear-gradient(135deg, #ffffff 20%, #a5c7ff 80%);
+                -webkit-background-clip: text;
+                background-clip: text;
+                -webkit-text-fill-color: transparent;
+                color: transparent;
+            }
+        }
+
         .subtitle {
             font-size: 0.95rem;
             color: var(--text-sub);
+        }
+
+        .subtitle-note {
+            font-size: 12px;
+            color: rgba(178, 184, 212, 0.7);
+            margin-top: 4px;
+            letter-spacing: 0.2px;
         }
 
         /* 搜索框容器 */
@@ -120,7 +188,7 @@
             position: relative;
             padding: 0 15px;
         }
-        
+
         .search-input-wrap {
             position: relative;
             display: flex;
@@ -129,7 +197,7 @@
 
         #characterSearch {
             width: 100%;
-            padding: 14px 24px 14px 52px;
+            padding: 14px 52px 14px 46px;
             font-size: 16px;
             border: 1px solid var(--border-light);
             border-radius: 50px;
@@ -137,125 +205,164 @@
             backdrop-filter: blur(12px);
             color: white;
             outline: none;
-            transition: all var(--transition-fast);
+            transition: background var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
         }
-        
+
         #characterSearch:focus {
             background: rgba(255, 255, 255, 0.2);
             border-color: rgba(140, 190, 255, 0.8);
             box-shadow: 0 0 25px rgba(80, 150, 255, 0.45);
         }
-        
+
         #characterSearch::placeholder {
-            color: rgba(255, 255, 255, 0.65);
+            color: rgba(255, 255, 255, 0.62);
         }
-        
+
         .search-icon {
             position: absolute;
-            left: 32px;
-            color: rgba(255, 255, 255, 0.75);
-            font-size: 20px;
+            left: 17px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            color: rgba(255, 255, 255, 0.7);
             pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .search-icon svg {
+            width: 20px;
+            height: 20px;
         }
 
         .clear-search {
             position: absolute;
-            right: 30px;
-            background: none;
-            border: none;
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 18px;
-            cursor: pointer;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
             display: none;
-            padding: 4px;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            font-size: 20px;
+            line-height: 1;
+            border: none;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.12);
+            color: rgba(255, 255, 255, 0.75);
+            cursor: pointer;
+            transition: background var(--transition-fast), color var(--transition-fast);
         }
-        .clear-search:hover {
+
+        .clear-search:hover,
+        .clear-search:focus-visible {
+            background: rgba(255, 255, 255, 0.26);
             color: #fff;
         }
-        
+
         .hint-message {
             color: rgba(220, 230, 255, 0.7);
             font-size: 13px;
             text-align: center;
-            margin-top: 8px;
-            font-style: normal;
+            margin-top: 10px;
         }
 
         .hint-tag {
             display: inline-block;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 2px 8px;
+            padding: 2px 9px;
+            margin: 2px 3px;
+            border: 0;
             border-radius: 12px;
-            margin: 0 3px;
+            background: rgba(255, 255, 255, 0.1);
+            color: inherit;
+            font: inherit;
             cursor: pointer;
-            transition: background var(--transition-fast);
+            transition: background var(--transition-fast), color var(--transition-fast);
         }
-        .hint-tag:hover {
+
+        .hint-tag:hover,
+        .hint-tag:focus-visible {
             background: rgba(255, 255, 255, 0.25);
             color: #fff;
         }
 
-        /* 搜索快捷匹配面板 */
+        /* 搜索结果面板 */
         .search-suggestions {
             display: none;
             margin: 12px auto 0;
-            max-width: 640px;
-            padding: 10px 15px;
-            background: rgba(20, 22, 35, 0.95);
+            padding: 12px 15px;
+            background: rgba(20, 22, 35, 0.96);
             border: 1px solid var(--border-light);
             border-radius: var(--radius-md);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
         }
+
         .search-suggestions-title {
             font-size: 12px;
             color: var(--text-sub);
-            margin-bottom: 6px;
+            margin-bottom: 8px;
         }
+
         .search-chips {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
         }
+
         .search-chip {
             display: inline-flex;
             align-items: center;
             gap: 6px;
             padding: 5px 12px;
             background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255,255,255,0.12);
+            border: 1px solid rgba(255, 255, 255, 0.12);
             border-radius: 20px;
+            font: inherit;
             font-size: 13px;
+            line-height: 1.2;
             color: #fff;
             cursor: pointer;
-            transition: all var(--transition-fast);
+            transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
         }
-        .search-chip:hover {
+
+        .search-chip:hover,
+        .search-chip:focus-visible {
             background: rgba(255, 255, 255, 0.2);
             transform: translateY(-2px);
             border-color: #ffdd40;
         }
+
         .search-chip img {
             width: 22px;
             height: 22px;
             object-fit: contain;
         }
 
-        .no-results {
-            text-align: center;
-            color: #ff8b8b;
-            font-size: 15px;
-            margin: 15px auto;
-            max-width: 600px;
-            padding: 12px 20px;
-            background: rgba(140, 20, 30, 0.35);
-            border: 1px solid rgba(255, 100, 100, 0.3);
-            border-radius: var(--radius-md);
-            backdrop-filter: blur(8px);
+        .search-chip .chip-unit {
+            font-size: 11px;
+            opacity: 0.7;
         }
 
-        /* 弹窗通用基础 */
-        .modal, .character-modal, .detail-modal {
+        .no-results {
+            text-align: center;
+            color: #ff9f9f;
+            font-size: 14px;
+            margin: 4px auto 0;
+            padding: 10px 14px;
+            background: rgba(140, 20, 30, 0.3);
+            border: 1px solid rgba(255, 100, 100, 0.28);
+            border-radius: var(--radius-sm);
+        }
+
+        /* 弹窗通用基础（三个视图都是整屏滚动容器） */
+        .modal,
+        .character-modal,
+        .detail-modal {
             position: fixed;
             z-index: 10;
             left: 0;
@@ -263,42 +370,52 @@
             width: 100%;
             height: 100%;
             overflow-y: auto;
+            overflow-x: hidden;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
             background-color: rgba(6, 8, 14, 0.94);
             backdrop-filter: blur(10px);
-            padding: 30px 15px 50px;
-            transition: opacity 0.3s ease;
+            padding: 30px 15px 84px;
         }
 
-        .character-modal { z-index: 20; }
-        .detail-modal { z-index: 30; }
+        .character-modal {
+            z-index: 20;
+        }
 
-        /* 顶部导航控制条 */
+        .detail-modal {
+            z-index: 30;
+        }
+
         .modal-nav {
             max-width: 860px;
             margin: 0 auto 20px;
             display: flex;
             align-items: center;
             position: relative;
-            padding: 0 50px 0 5px;
+            padding: 0 54px 0 5px;
         }
 
         .back-button {
             display: inline-flex;
             align-items: center;
             gap: 8px;
+            max-width: 100%;
             color: #fff;
             font-size: 15px;
             font-weight: 600;
+            font-family: inherit;
             cursor: pointer;
             background: rgba(80, 100, 180, 0.45);
             border: 1px solid rgba(130, 160, 255, 0.35);
             padding: 8px 18px;
             border-radius: 30px;
-            transition: all var(--transition-fast);
+            transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
             backdrop-filter: blur(8px);
             user-select: none;
         }
-        .back-button:hover {
+
+        .back-button:hover,
+        .back-button:focus-visible {
             background: rgba(100, 130, 230, 0.7);
             border-color: rgba(180, 210, 255, 0.8);
             transform: translateX(-3px);
@@ -321,7 +438,7 @@
             border-radius: var(--radius-lg);
             overflow: hidden;
             width: 100%;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
             transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease;
             cursor: pointer;
             position: relative;
@@ -331,10 +448,7 @@
         .unit-card::before {
             content: "";
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            inset: 0;
             z-index: 1;
             border-radius: var(--radius-lg);
             transition: opacity 0.3s ease;
@@ -359,42 +473,31 @@
             background: linear-gradient(135deg, rgba(135, 75, 210, 0.75) 0%, rgba(55, 25, 95, 0.9) 100%);
         }
 
-        .unit-card:hover {
+        .unit-card:hover,
+        .unit-card:focus-within {
             transform: translateY(-5px) scale(1.01);
-            box-shadow: 0 16px 35px rgba(0,0,0,0.55);
+            box-shadow: 0 16px 35px rgba(0, 0, 0, 0.55);
             border-color: rgba(255, 255, 255, 0.35);
         }
-        .unit-card:hover::before {
+
+        .unit-card:hover::before,
+        .unit-card:focus-within::before {
             opacity: 0.8;
         }
 
         .unit-card.highlighted {
             border: 2px solid #ffdd40;
             box-shadow: 0 0 30px rgba(255, 221, 64, 0.55);
-            transform: scale(1.02);
-            animation: pulse 1.6s ease-in-out infinite;
+            animation: pulse 1.8s ease-in-out infinite;
         }
+
         .unit-card.highlighted::before {
             opacity: 0.85;
         }
-        .unit-card.highlighted::after {
-            content: "★ 搜索匹配";
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            padding: 4px 12px;
-            background: #ffdd40;
-            color: #1a1a1a;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 800;
-            box-shadow: 0 0 15px rgba(255, 221, 64, 0.8);
-            z-index: 4;
-        }
 
         @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 20px rgba(255, 221, 64, 0.4); }
-            50% { box-shadow: 0 0 35px rgba(255, 221, 64, 0.75); }
+            0%, 100% { box-shadow: 0 0 18px rgba(255, 221, 64, 0.35); }
+            50% { box-shadow: 0 0 32px rgba(255, 221, 64, 0.7); }
         }
 
         .unit-header-wrap {
@@ -405,20 +508,66 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
+            flex-wrap: wrap;
+            gap: 6px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
+
+        .unit-header-left {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+        }
+
+        .unit-name-line {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px 10px;
+        }
+
         .unit-name-text {
-            font-size: 22px;
+            font-size: clamp(1.02rem, 4.2vw, 22px);
             font-weight: 800;
-            letter-spacing: 0.5px;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.6);
+            letter-spacing: 0.3px;
+            line-height: 1.3;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+            overflow-wrap: anywhere;
         }
+
+        .unit-name-jp {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.55);
+            letter-spacing: 0.2px;
+            line-height: 1.4;
+        }
+
+        .unit-match-flag {
+            display: none;
+            align-items: center;
+            padding: 2px 9px;
+            border-radius: 20px;
+            background: #ffdd40;
+            color: #221d05;
+            font-size: 11.5px;
+            font-weight: 800;
+            line-height: 1.5;
+            white-space: nowrap;
+            box-shadow: 0 0 12px rgba(255, 221, 64, 0.6);
+        }
+
+        .unit-card.highlighted .unit-match-flag {
+            display: inline-flex;
+        }
+
         .unit-badge {
             font-size: 12px;
             padding: 4px 10px;
             background: rgba(255, 255, 255, 0.15);
             border-radius: 20px;
             font-weight: 600;
+            white-space: nowrap;
         }
 
         .unit-body {
@@ -429,6 +578,7 @@
             align-items: center;
             gap: 25px;
         }
+
         .unit-logo-box {
             flex: 0 0 200px;
             display: flex;
@@ -439,61 +589,97 @@
             border-radius: var(--radius-md);
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
+
         .unit-image {
             width: 100%;
             max-height: 110px;
             object-fit: contain;
-            filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));
+            filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
         }
 
-        /* 组合卡片内的Q版成员装饰栏 */
+        /* 组合卡片内的 Q 版成员入口 */
         .unit-members-preview {
             flex: 1;
+            min-width: 0;
             display: flex;
             flex-direction: column;
             gap: 10px;
         }
+
         .preview-title {
             font-size: 13px;
             color: rgba(255, 255, 255, 0.85);
             display: flex;
             align-items: center;
             justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
         }
+
+        .unit-open-btn {
+            padding: 4px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.9);
+            font: inherit;
+            font-size: 11.5px;
+            cursor: pointer;
+            transition: background var(--transition-fast), border-color var(--transition-fast);
+        }
+
+        .unit-open-btn:hover,
+        .unit-open-btn:focus-visible {
+            background: rgba(255, 255, 255, 0.24);
+            border-color: rgba(255, 255, 255, 0.45);
+            color: #fff;
+        }
+
         .preview-chibis {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 10px;
         }
+
         .preview-chibi-item {
             display: flex;
             flex-direction: column;
             align-items: center;
-            background: rgba(0, 0, 0, 0.28);
             padding: 8px 4px;
-            border-radius: var(--radius-md);
+            background: rgba(0, 0, 0, 0.28);
             border: 1px solid rgba(255, 255, 255, 0.07);
-            transition: all var(--transition-fast);
+            border-radius: var(--radius-md);
+            color: inherit;
+            font: inherit;
+            cursor: pointer;
+            transition: background var(--transition-fast), transform var(--transition-fast), border-color var(--transition-fast);
         }
-        .preview-chibi-item:hover {
+
+        .preview-chibi-item:hover,
+        .preview-chibi-item:focus-visible {
             background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
             transform: translateY(-3px);
         }
+
         .preview-chibi-item img {
-            width: 54px;
-            height: 54px;
+            width: min(54px, 100%);
+            height: auto;
+            aspect-ratio: 1;
             object-fit: contain;
-            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.4));
+            filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.4));
         }
+
         .preview-chibi-name {
             font-size: 12px;
             margin-top: 4px;
             font-weight: 600;
             color: #e5ebff;
             text-align: center;
+            line-height: 1.3;
         }
 
-        /* 组合成员弹窗 */
+        /* 组合成员视图 */
         .character-content {
             max-width: 860px;
             margin: 0 auto;
@@ -501,7 +687,7 @@
             background: rgba(22, 25, 38, 0.9);
             border: 1px solid var(--border-light);
             border-radius: var(--radius-lg);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(16px);
         }
 
@@ -510,6 +696,7 @@
             margin-bottom: 25px;
             position: relative;
         }
+
         .unit-title {
             font-size: 1.9rem;
             font-weight: 800;
@@ -517,14 +704,23 @@
             text-shadow: 0 0 15px rgba(100, 160, 255, 0.6);
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 12px;
+            flex-wrap: wrap;
+            outline: none;
+            max-width: 100%;
         }
+
+        .unit-title:focus {
+            outline: none;
+        }
+
         .unit-title-logo {
             height: 42px;
             max-width: 140px;
             object-fit: contain;
-            vertical-align: middle;
         }
+
         .unit-subtitle-hint {
             font-size: 13px;
             color: var(--text-sub);
@@ -533,7 +729,7 @@
 
         .characters-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
             gap: 22px;
         }
 
@@ -542,19 +738,21 @@
             border: 1px solid var(--border-light);
             border-radius: var(--radius-md);
             overflow: hidden;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.3, 1);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.3, 1), border-color 0.3s ease, box-shadow 0.3s ease;
             cursor: pointer;
             display: flex;
             flex-direction: column;
             position: relative;
         }
+
         .character-card:hover {
             transform: translateY(-6px);
             border-color: rgba(255, 221, 64, 0.6);
             box-shadow: 0 14px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 221, 64, 0.2);
         }
-        .character-card:focus {
+
+        .character-card:focus-visible {
             outline: 2px solid var(--accent-gold);
             outline-offset: 2px;
         }
@@ -565,54 +763,69 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 6px 10px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
+
         .character-name-group {
             display: flex;
             align-items: center;
             gap: 10px;
+            min-width: 0;
         }
+
         .character-chibi-badge {
             width: 38px;
             height: 38px;
+            flex: 0 0 38px;
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
             object-fit: contain;
             padding: 2px;
         }
+
         .character-card-name {
             font-size: 18px;
             font-weight: 700;
             color: #fff;
+            line-height: 1.3;
         }
+
         .character-card-role {
-            font-size: 12px;
-            padding: 3px 8px;
+            font-size: 11.5px;
+            padding: 3px 9px;
             background: rgba(255, 255, 255, 0.12);
             border-radius: 12px;
             color: #ffdd81;
+            line-height: 1.4;
+            max-width: 100%;
         }
 
+        /* 卡片立绘：源图（images/Char-Before）统一为 1000×571 的横图，
+           容器按同一比例取高，让画面铺满整行，不再出现竖框上下留白 */
         .character-img-wrap {
             position: relative;
             width: 100%;
-            height: 240px;
+            aspect-ratio: 1000 / 571;
             background: radial-gradient(circle at 50% 30%, rgba(50, 60, 90, 0.6), rgba(15, 18, 28, 0.9));
             overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
         }
+
         .character-image {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            object-position: center 15%;
+            object-position: center;
             transition: transform 0.4s ease;
         }
+
         .character-card:hover .character-image {
-            transform: scale(1.05);
+            transform: scale(1.04);
         }
 
         .character-card-body {
@@ -623,24 +836,27 @@
             justify-content: space-between;
             background: rgba(20, 23, 36, 0.7);
         }
+
         .character-description {
             font-size: 14px;
-            line-height: 1.6;
+            line-height: 1.7;
             color: #d1d7ee;
             display: -webkit-box;
-            -webkit-line-clamp: 4;
+            -webkit-line-clamp: 5;
             -webkit-box-orient: vertical;
             overflow: hidden;
             margin-bottom: 12px;
         }
+
         .card-footer-tags {
             display: flex;
             flex-wrap: wrap;
             gap: 6px;
             margin-top: auto;
             padding-top: 10px;
-            border-top: 1px solid rgba(255,255,255,0.06);
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
         }
+
         .info-tag {
             font-size: 12px;
             padding: 3px 8px;
@@ -649,7 +865,13 @@
             color: #aeb6d6;
         }
 
-        /* 角色个人详情弹窗 */
+        .info-tag b {
+            font-weight: 600;
+            color: #8f9ac2;
+            margin-right: 4px;
+        }
+
+        /* 角色详情视图 */
         .detail-content {
             max-width: 860px;
             margin: 0 auto;
@@ -657,7 +879,7 @@
             background: rgba(20, 23, 36, 0.92);
             border: 1px solid var(--border-light);
             border-radius: var(--radius-lg);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(18px);
         }
 
@@ -665,28 +887,35 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
             padding: 15px 20px;
             background: rgba(10, 12, 22, 0.6);
             border-radius: var(--radius-md);
             margin-bottom: 20px;
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
+
         .detail-header-left {
             display: flex;
             align-items: center;
             gap: 15px;
+            min-width: 0;
         }
+
         .detail-chibi-avatar {
             width: 64px;
             height: 64px;
+            flex: 0 0 64px;
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.12);
             border: 2px solid rgba(255, 255, 255, 0.3);
             object-fit: contain;
             padding: 4px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-            animation: bounceChibi 3s ease-in-out infinite;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            animation: bounceChibi 3.4s ease-in-out infinite;
         }
+
         @keyframes bounceChibi {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-5px); }
@@ -697,19 +926,28 @@
             font-weight: 800;
             color: #fff;
             letter-spacing: 0.5px;
+            line-height: 1.35;
+            outline: none;
         }
+
         .detail-unit-badge {
             display: inline-flex;
             align-items: center;
+            flex-wrap: wrap;
             gap: 6px;
             font-size: 13px;
             color: #b9c4ec;
             margin-top: 4px;
         }
 
-        /* 纯粹立绘大图展示区 */
+        /* 立绘展示区：完整显示，不裁切 */
         .detail-illustration-box {
             position: relative;
+            min-height: 260px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 14px;
             background: radial-gradient(circle at 50% 20%, rgba(45, 55, 85, 0.5), rgba(12, 14, 22, 0.95));
             border-radius: var(--radius-md);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -717,15 +955,18 @@
             margin-bottom: 22px;
             box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.6);
         }
+
         .detail-image {
             display: block;
-            width: 100%;
-            max-height: 540px;
-            object-fit: cover;
-            object-position: center top;
+            margin: 0 auto;
+            width: auto;
+            max-width: 100%;
+            max-height: min(66vh, 620px);
+            object-fit: contain;
+            filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.45));
         }
 
-        /* 角色资料完整表格（包含用户指定的16项必须信息） */
+        /* 角色档案表格 */
         .table-section-title {
             font-size: 18px;
             font-weight: 700;
@@ -735,6 +976,7 @@
             align-items: center;
             gap: 8px;
         }
+
         .table-section-title::before {
             content: "";
             display: inline-block;
@@ -753,17 +995,19 @@
             border: 1px solid var(--border-light);
             border-radius: var(--radius-md);
             overflow: hidden;
-            margin-bottom: 25px;
+            margin-bottom: 12px;
+            table-layout: fixed;
         }
 
         .detail-table th,
         .detail-table td {
             padding: 12px 18px;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             text-align: left;
             vertical-align: middle;
             font-size: 14px;
-            line-height: 1.6;
+            line-height: 1.7;
+            overflow-wrap: anywhere;
         }
 
         .detail-table tr:last-child th,
@@ -771,33 +1015,43 @@
             border-bottom: none;
         }
 
-        .detail-table tr:hover td {
-            background: rgba(255, 255, 255, 0.03);
+        .detail-table tbody tr:hover th,
+        .detail-table tbody tr:hover td {
+            background: rgba(255, 255, 255, 0.04);
         }
 
         .detail-table th {
-            width: 25%;
+            width: 28%;
             color: #ffdd81;
             background: rgba(255, 255, 255, 0.05);
             font-weight: 600;
-            border-right: 1px solid rgba(255,255,255,0.08);
-            white-space: nowrap;
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .detail-table td {
             color: #e4e8ff;
         }
 
+        .detail-note {
+            font-size: 12.5px;
+            line-height: 1.8;
+            color: rgba(178, 184, 212, 0.8);
+            margin: 0 0 22px;
+            padding-left: 2px;
+        }
+
         /* 代表色徽章 */
         .color-badge-container {
             display: inline-flex;
             align-items: center;
+            flex-wrap: wrap;
             gap: 10px;
             background: rgba(0, 0, 0, 0.35);
             padding: 4px 12px 4px 6px;
             border-radius: 20px;
             border: 1px solid rgba(255, 255, 255, 0.12);
         }
+
         .color-swatch {
             width: 22px;
             height: 22px;
@@ -806,8 +1060,9 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
             flex-shrink: 0;
         }
+
         .color-hex {
-            font-family: Consolas, monospace;
+            font-family: Consolas, "SFMono-Regular", Menlo, monospace;
             font-weight: 700;
             letter-spacing: 0.5px;
         }
@@ -838,26 +1093,29 @@
             color: #fff;
             font-size: 15px;
             font-weight: 700;
+            font-family: inherit;
             cursor: pointer;
             text-decoration: none;
             text-align: center;
-            transition: all var(--transition-fast);
+            transition: transform var(--transition-fast), filter var(--transition-fast), box-shadow var(--transition-fast);
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }
 
-        .action-button:hover {
+        .action-button:hover,
+        .action-button:focus-visible {
             transform: translateY(-3px);
             filter: brightness(1.15);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
         }
 
         #cheerButton {
             background: linear-gradient(135deg, #ff5e90, #e0387b);
         }
+
         #listenButton {
             background: linear-gradient(135deg, #4d7cf2, #734cd6);
         }
@@ -875,288 +1133,493 @@
             text-align: center;
             color: rgba(255, 255, 255, 0.45);
             padding: 30px 15px 20px;
-            font-size: 13px;
+            font-size: 12.5px;
+            line-height: 1.9;
         }
 
-        /* 响应式样式调整 */
+        .footer a {
+            color: rgba(160, 190, 255, 0.75);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* 图片加载失败时的占位 */
+        .img-missing {
+            background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.06) 0 8px, rgba(255, 255, 255, 0.02) 8px 16px);
+            border: 1px dashed rgba(255, 255, 255, 0.25);
+            color: rgba(255, 255, 255, 0.55);
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .noscript-note {
+            max-width: 640px;
+            margin: 0 auto 10px;
+            padding: 10px 14px;
+            border-radius: var(--radius-md);
+            background: rgba(255, 221, 64, 0.12);
+            border: 1px solid rgba(255, 221, 64, 0.35);
+            color: #ffe79a;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        /* 左下角语言切换 */
+        .lang-switch {
+            position: fixed;
+            left: 18px;
+            bottom: 18px;
+            z-index: 110;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            padding: 4px;
+            border-radius: 999px;
+            background: rgba(18, 20, 32, 0.88);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+        }
+
+        .lang-btn {
+            min-width: 54px;
+            padding: 6px 10px;
+            border: 0;
+            border-radius: 999px;
+            background: transparent;
+            color: rgba(240, 243, 255, 0.72);
+            font: inherit;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            cursor: pointer;
+            transition: background var(--transition-fast), color var(--transition-fast);
+        }
+
+        .lang-btn:hover,
+        .lang-btn:focus-visible {
+            background: rgba(255, 255, 255, 0.16);
+            color: #fff;
+        }
+
+        .lang-btn[aria-pressed="true"] {
+            background: #ffdd40;
+            color: #221d05;
+        }
+
+        @media (max-width: 420px) {
+            .lang-switch {
+                left: 12px;
+                bottom: 12px;
+            }
+            .lang-btn {
+                min-width: 46px;
+                padding: 5px 8px;
+                font-size: 11.5px;
+            }
+        }
+
+        /* 响应式 */
         @media (max-width: 768px) {
-            .global-close-btn { top: 16px; right: 16px; width: 38px; height: 38px; }
-            .main-title { font-size: 1.8rem; }
-            .unit-body { flex-direction: column; text-align: center; }
-            .unit-logo-box { width: 100%; max-width: 240px; }
-            .characters-grid { grid-template-columns: 1fr; }
-            .detail-content { padding: 18px 15px 30px; }
-            .detail-header-card { flex-direction: column; text-align: center; gap: 10px; }
-            .detail-table th { width: 34%; }
-            .action-button-group { flex-direction: column; }
-            .action-button { width: 100%; }
+            .global-close-btn {
+                top: 14px;
+                right: 14px;
+                width: 38px;
+                height: 38px;
+            }
+            .main-title {
+                font-size: 1.62rem;
+                letter-spacing: 0.5px;
+            }
+            .unit-body {
+                flex-direction: column;
+                text-align: center;
+            }
+            .unit-logo-box {
+                width: 100%;
+                max-width: 240px;
+            }
+            .preview-title {
+                justify-content: center;
+            }
+            .characters-grid {
+                grid-template-columns: 1fr;
+            }
+            .detail-content {
+                padding: 18px 15px 30px;
+            }
+            .detail-header-card {
+                flex-direction: column;
+                text-align: center;
+            }
+            .detail-header-left {
+                flex-direction: column;
+                text-align: center;
+            }
+            .detail-table th {
+                width: 34%;
+                padding: 10px 12px;
+            }
+            .detail-table td {
+                padding: 10px 12px;
+            }
+            .action-button-group {
+                flex-direction: column;
+            }
+            .action-button {
+                width: 100%;
+            }
+            .detail-image {
+                max-height: 60vh;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .preview-chibis {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .preview-chibi-item {
+                flex-direction: row;
+                justify-content: center;
+                gap: 8px;
+            }
+            .preview-chibi-item img {
+                width: 44px;
+                height: 44px;
+            }
+            .preview-chibi-name {
+                margin-top: 0;
+            }
+            .unit-header-wrap,
+            .unit-body {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+            .detail-title-text {
+                font-size: 20px;
+            }
+            .detail-table th {
+                width: 36%;
+                white-space: normal;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.001ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.001ms !important;
+            }
         }
     </style>
 </head>
 <body>
+    <noscript>
+        <p class="noscript-note">组合成员列表、角色详情与搜索需要启用 JavaScript 才能使用。</p>
+    </noscript>
 
-    <!-- 全局统一固定的右上角关闭/逐级返回按钮 -->
-    <button id="globalCloseBtn" class="global-close-btn" title="返回上一级 / 关闭" aria-label="返回上一级">
-        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" fill="none">
+    <!-- 全局固定返回按钮：只在组合 / 角色子页面出现 -->
+    <button id="globalCloseBtn" class="global-close-btn" type="button" title="返回上一级" aria-label="返回上一级">
+        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" fill="none" aria-hidden="true">
             <line x1="5" y1="5" x2="19" y2="19"></line>
             <line x1="19" y1="5" x2="5" y2="19"></line>
         </svg>
     </button>
 
-    <!-- 主界面：组合展示与搜索 -->
+    <!-- 视图一：组合总览 + 搜索 -->
     <div id="unitsModal" class="modal" style="display: block;">
         <header class="page-header">
-            <h1 class="main-title">世界计划：缤纷舞台</h1>
-            <p class="subtitle">PROJECT SEKAI COLORFUL STAGE! · 角色与组合图集</p>
+            <h1 class="main-title">初音未来：缤纷舞台</h1>
+            <p class="subtitle">HATSUNE MIKU: COLORFUL STAGE! · 角色与组合图集</p>
+            <p class="subtitle-note">日文原名：プロジェクトセカイ カラフルステージ！ feat. 初音ミク</p>
         </header>
 
-        <!-- 搜索框 -->
         <div class="search-container">
             <div class="search-input-wrap">
-                <span class="search-icon">🔍</span>
-                <input type="text" id="characterSearch" placeholder="搜索角色本名、组合、爱好、食物等..." autocomplete="off">
-                <button id="clearSearchBtn" class="clear-search" title="清空搜索">&times;</button>
-            </div>
-            <div class="hint-message">
-                快捷体验：
-                <span class="hint-tag" data-kw="星乃一歌">星乃一歌</span>
-                <span class="hint-tag" data-kw="宵崎奏">宵崎奏</span>
-                <span class="hint-tag" data-kw="天马司">天马司</span>
-                <span class="hint-tag" data-kw="小豆泽心羽">小豆泽心羽</span>
-                <span class="hint-tag" data-kw="花里实乃理">花里实乃理</span>
-            </div>
-            
-            <!-- 搜索匹配推荐面板 -->
-            <div id="searchSuggestions" class="search-suggestions">
-                <div class="search-suggestions-title">匹配到的角色（点击直达详情）：</div>
-                <div id="searchChips" class="search-chips"></div>
+                <span class="search-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <circle cx="11" cy="11" r="7"></circle>
+                        <line x1="16.5" y1="16.5" x2="21" y2="21"></line>
+                    </svg>
+                </span>
+                <input type="text" id="characterSearch" placeholder="搜索角色名、组合、生日、爱好、食物…" autocomplete="off" aria-label="搜索角色">
+                <button id="clearSearchBtn" class="clear-search" type="button" title="清空搜索" aria-label="清空搜索">&times;</button>
             </div>
 
-            <div id="searchResults"></div>
+            <div class="hint-message">
+                <span id="hintLabel">快捷体验：</span>
+                <button type="button" class="hint-tag" data-kw="星乃一歌">星乃一歌</button>
+                <button type="button" class="hint-tag" data-kw="宵崎奏">宵崎奏</button>
+                <button type="button" class="hint-tag" data-kw="天马司">天马司</button>
+                <button type="button" class="hint-tag" data-kw="小豆泽心羽">小豆泽心羽</button>
+                <button type="button" class="hint-tag" data-kw="花里实乃理">花里实乃理</button>
+            </div>
+
+            <div id="searchSuggestions" class="search-suggestions" aria-live="polite">
+                <div class="search-suggestions-title" id="searchSuggestionsTitle">输入关键词开始搜索</div>
+                <div id="searchChips" class="search-chips"></div>
+                <p id="searchEmpty" class="no-results" hidden>未能匹配到相关角色。<br>可以试试角色名、组合名（leo / mmj / vbs / wxs / nightcord / 25时）、生日或学校。</p>
+            </div>
         </div>
 
-        <!-- 组合卡片列表 -->
         <main class="modal-content">
             <!-- Leo/need -->
-            <article class="unit-card" data-unit="leoneed" tabindex="0" role="button" aria-label="查看Leo/need组合成员">
+            <article class="unit-card" data-unit="leoneed">
                 <div class="unit-header-wrap">
-                    <div class="unit-name-text" style="color: #6da2ff;">Leo/need</div>
+                    <div class="unit-header-left">
+                        <div class="unit-name-line">
+                            <span class="unit-name-text" style="color:#6da2ff;">Leo/need</span>
+                            <span class="unit-match-flag">★ 搜索命中</span>
+                        </div>
+                    </div>
                     <span class="unit-badge">乐队组合 · 4人</span>
                 </div>
                 <div class="unit-body">
                     <div class="unit-logo-box">
-                        <img class="unit-image" src="images/Team Logos/leoneedlogo.png" alt="Leo/need 队标">
+                        <img class="unit-image" src="images/Team Logos/leoneedlogo.png" alt="Leo/need 队标" loading="lazy" decoding="async">
                     </div>
                     <div class="unit-members-preview">
                         <div class="preview-title">
                             <span>团员阵容</span>
-                            <span style="font-size: 11px; opacity: 0.7;">点击卡片进入成员列表 →</span>
+                            <button class="unit-open-btn" type="button">查看成员 →</button>
                         </div>
                         <div class="preview-chibis">
-                            <div class="preview-chibi-item">
-                                <img src="images/Chibis/Ichika_Casual_chibi.png" alt="星乃一歌 Q版">
+                            <button class="preview-chibi-item" type="button" data-char="星乃一歌" aria-label="查看星乃一歌的详细档案">
+                                <img src="images/Chibis/Ichika_Casual_chibi.png" alt="" loading="lazy" decoding="async">
                                 <span class="preview-chibi-name">一歌</span>
-                            </div>
-                            <div class="preview-chibi-item">
-                                <img src="images/Chibis/Saki_Casual_chibi.png" alt="天马咲希 Q版">
+                            </button>
+                            <button class="preview-chibi-item" type="button" data-char="天马咲希" aria-label="查看天马咲希的详细档案">
+                                <img src="images/Chibis/Saki_Casual_chibi.png" alt="" loading="lazy" decoding="async">
                                 <span class="preview-chibi-name">咲希</span>
-                            </div>
-                            <div class="preview-chibi-item">
-                                <img src="images/Chibis/Honami_Casual_chibi.png" alt="望月穗波 Q版">
+                            </button>
+                            <button class="preview-chibi-item" type="button" data-char="望月穗波" aria-label="查看望月穗波的详细档案">
+                                <img src="images/Chibis/Honami_Casual_chibi.png" alt="" loading="lazy" decoding="async">
                                 <span class="preview-chibi-name">穗波</span>
-                            </div>
-                            <div class="preview-chibi-item">
-                                <img src="images/Chibis/Shiho_Casual_chibi.png" alt="日野森志步 Q版">
+                            </button>
+                            <button class="preview-chibi-item" type="button" data-char="日野森志步" aria-label="查看日野森志步的详细档案">
+                                <img src="images/Chibis/Shiho_Casual_chibi.png" alt="" loading="lazy" decoding="async">
                                 <span class="preview-chibi-name">志步</span>
-                            </div>
+                            </button>
                         </div>
                     </div>
                 </div>
             </article>
 
             <!-- MORE MORE JUMP! -->
-            <article class="unit-card" data-unit="mmj" tabindex="0" role="button" aria-label="查看MORE MORE JUMP!组合成员">
+            <article class="unit-card" data-unit="mmj">
                 <div class="unit-header-wrap">
-                    <div class="unit-name-text" style="color: #63f08d;">MORE MORE JUMP!</div>
+                    <div class="unit-header-left">
+                        <div class="unit-name-line">
+                            <span class="unit-name-text" style="color:#63f08d;">MORE MORE JUMP!</span>
+                            <span class="unit-match-flag">★ 搜索命中</span>
+                        </div>
+                    </div>
                     <span class="unit-badge">偶像组合 · 4人</span>
                 </div>
                 <div class="unit-body">
                     <div class="unit-logo-box">
-                        <img class="unit-image" src="images/Team Logos/moremorejumplogo.png" alt="MORE MORE JUMP! 队标">
+                        <img class="unit-image" src="images/Team Logos/moremorejumplogo.png" alt="MORE MORE JUMP! 队标" loading="lazy" decoding="async">
                     </div>
                     <div class="unit-members-preview">
                         <div class="preview-title">
                             <span>团员阵容</span>
-                            <span style="font-size: 11px; opacity: 0.7;">点击卡片进入成员列表 →</span>
+                            <button class="unit-open-btn" type="button">查看成员 →</button>
                         </div>
                         <div class="preview-chibis">
-                            <div class="preview-chibi-item">
-                                <img src="images/Chibis/Minori_Casual_chibi.png" alt="花里实乃理 Q版">
+                            <button class="preview-chibi-item" type="button" data-char="花里实乃理" aria-label="查看花里实乃理的详细档案">
+                                <img src="images/Chibis/Minori_Casual_chibi.png" alt="" loading="lazy" decoding="async">
                                 <span class="preview-chibi-name">实乃理</span>
-                            </div>
-                            <div class="preview-chibi-item">
-                                <img src="images/Chibis/Haruka_Casual_chibi.png" alt="桐谷遥 Q版">
+                            </button>
+                            <button class="preview-chibi-item" type="button" data-char="桐谷遥" aria-label="查看桐谷遥的详细档案">
+                                <img src="images/Chibis/Haruka_Casual_chibi.png" alt="" loading="lazy" decoding="async">
                                 <span class="preview-chibi-name">遥</span>
-                            </div>
-                            <div class="preview-chibi-item">
-                                <img src="images/Chibis/Airi_Casual_chibi.png" alt="桃井爱莉 Q版">
+                            </button>
+                            <button class="preview-chibi-item" type="button" data-char="桃井爱莉" aria-label="查看桃井爱莉的详细档案">
+                                <img src="images/Chibis/Airi_Casual_chibi.png" alt="" loading="lazy" decoding="async">
                                 <span class="preview-chibi-name">爱莉</span>
-                            </div>
-                            <div class="preview-chibi-item">
-                                <img src="images/Chibis/Shizuku_Casual_chibi.png" alt="日野森雫 Q版">
+                            </button>
+                            <button class="preview-chibi-item" type="button" data-char="日野森雫" aria-label="查看日野森雫的详细档案">
+                                <img src="images/Chibis/Shizuku_Casual_chibi.png" alt="" loading="lazy" decoding="async">
                                 <span class="preview-chibi-name">雫</span>
-                            </div>
+                            </button>
                         </div>
                     </div>
                 </div>
             </article>
 
             <!-- Vivid BAD SQUAD -->
-            <article class="unit-card" data-unit="vbs" tabindex="0" role="button" aria-label="查看Vivid BAD SQUAD组合成员">
+            <article class="unit-card" data-unit="vbs">
                 <div class="unit-header-wrap">
-                    <div class="unit-name-text" style="color: #ff7d47;">Vivid BAD SQUAD</div>
-                    <span class="unit-badge">街头街舞组合 · 4人</span>
+                    <div class="unit-header-left">
+                        <div class="unit-name-line">
+                            <span class="unit-name-text" style="color:#ff7d47;">Vivid BAD SQUAD</span>
+                            <span class="unit-match-flag">★ 搜索命中</span>
+                        </div>
+                    </div>
+                    <span class="unit-badge">街头音乐组合 · 4人</span>
                 </div>
                 <div class="unit-body">
                     <div class="unit-logo-box">
-                        <img class="unit-image" src="images/Team Logos/vividbadsquadlogo.png" alt="Vivid BAD SQUAD 队标">
+                        <img class="unit-image" src="images/Team Logos/vividbadsquadlogo.png" alt="Vivid BAD SQUAD 队标" loading="lazy" decoding="async">
                     </div>
                     <div class="unit-members-preview">
                         <div class="preview-title">
                             <span>团员阵容</span>
-                            <span style="font-size: 11px; opacity: 0.7;">点击卡片进入成员列表 →</span>
+                            <button class="unit-open-btn" type="button">查看成员 →</button>
                         </div>
                         <div class="preview-chibis">
-                            <div class="preview-chibi-item">
-                                <img src="images/Chibis/Kohane_Unit_chibi.png" alt="小豆泽心羽 Q版">
+                            <button class="preview-chibi-item" type="button" data-char="小豆泽心羽" aria-label="查看小豆泽心羽的详细档案">
+                                <img src="images/Chibis/Kohane_Unit_chibi.png" alt="" loading="lazy" decoding="async">
                                 <span class="preview-chibi-name">心羽</span>
-                            </div>
-                            <div class="preview-chibi-item">
-                                <img src="images/Chibis/An_Unit_chibi.png" alt="白石杏 Q版">
+                            </button>
+                            <button class="preview-chibi-item" type="button" data-char="白石杏" aria-label="查看白石杏的详细档案">
+                                <img src="images/Chibis/An_Unit_chibi.png" alt="" loading="lazy" decoding="async">
                                 <span class="preview-chibi-name">杏</span>
-                            </div>
-                            <div class="preview-chibi-item">
-                                <img src="images/Chibis/Akito_Unit_chibi.png" alt="东云彰人 Q版">
+                            </button>
+                            <button class="preview-chibi-item" type="button" data-char="东云彰人" aria-label="查看东云彰人的详细档案">
+                                <img src="images/Chibis/Akito_Unit_chibi.png" alt="" loading="lazy" decoding="async">
                                 <span class="preview-chibi-name">彰人</span>
-                            </div>
-                            <div class="preview-chibi-item">
-                                <img src="images/Chibis/Toya_Unit_chibi.png" alt="青柳冬弥 Q版">
+                            </button>
+                            <button class="preview-chibi-item" type="button" data-char="青柳冬弥" aria-label="查看青柳冬弥的详细档案">
+                                <img src="images/Chibis/Toya_Unit_chibi.png" alt="" loading="lazy" decoding="async">
                                 <span class="preview-chibi-name">冬弥</span>
-                            </div>
+                            </button>
                         </div>
                     </div>
                 </div>
             </article>
 
-            <!-- Wonderlands × Showtime -->
-            <article class="unit-card" data-unit="wxs" tabindex="0" role="button" aria-label="查看Wonderlands × Showtime组合成员">
+            <!-- Wonderlands×Showtime -->
+            <article class="unit-card" data-unit="wxs">
                 <div class="unit-header-wrap">
-                    <div class="unit-name-text" style="color: #ffbe26;">ワンダーランズ×ショウタイム</div>
+                    <div class="unit-header-left">
+                        <div class="unit-name-line">
+                            <span class="unit-name-text" style="color:#ffbe26;">Wonderlands×Showtime</span>
+                            <span class="unit-match-flag">★ 搜索命中</span>
+                        </div>
+                        <span class="unit-name-jp">ワンダーランズ×ショウタイム</span>
+                    </div>
                     <span class="unit-badge">音乐剧团组合 · 4人</span>
                 </div>
                 <div class="unit-body">
                     <div class="unit-logo-box">
-                        <img class="unit-image" src="images/Team Logos/wxs.png" alt="Wonderlands × Showtime 队标">
+                        <img class="unit-image" src="images/Team Logos/wxs.png" alt="Wonderlands×Showtime 队标" loading="lazy" decoding="async">
                     </div>
                     <div class="unit-members-preview">
                         <div class="preview-title">
                             <span>团员阵容</span>
-                            <span style="font-size: 11px; opacity: 0.7;">点击卡片进入成员列表 →</span>
+                            <button class="unit-open-btn" type="button">查看成员 →</button>
                         </div>
                         <div class="preview-chibis">
-                            <div class="preview-chibi-item">
-                                <img src="images/Chibis/Tsukasa_Casual_chibi.png" alt="天马司 Q版">
+                            <button class="preview-chibi-item" type="button" data-char="天马司" aria-label="查看天马司的详细档案">
+                                <img src="images/Chibis/Tsukasa_Casual_chibi.png" alt="" loading="lazy" decoding="async">
                                 <span class="preview-chibi-name">司</span>
-                            </div>
-                            <div class="preview-chibi-item">
-                                <img src="images/Chibis/Emu_Casual_chibi.png" alt="凤笑梦 Q版">
+                            </button>
+                            <button class="preview-chibi-item" type="button" data-char="凤笑梦" aria-label="查看凤笑梦的详细档案">
+                                <img src="images/Chibis/Emu_Casual_chibi.png" alt="" loading="lazy" decoding="async">
                                 <span class="preview-chibi-name">笑梦</span>
-                            </div>
-                            <div class="preview-chibi-item">
-                                <img src="images/Chibis/Nene_Casual_chibi.png" alt="草薙宁宁 Q版">
+                            </button>
+                            <button class="preview-chibi-item" type="button" data-char="草薙宁宁" aria-label="查看草薙宁宁的详细档案">
+                                <img src="images/Chibis/Nene_Casual_chibi.png" alt="" loading="lazy" decoding="async">
                                 <span class="preview-chibi-name">宁宁</span>
-                            </div>
-                            <div class="preview-chibi-item">
-                                <img src="images/Chibis/Rui_Casual_chibi.png" alt="神代类 Q版">
+                            </button>
+                            <button class="preview-chibi-item" type="button" data-char="神代类" aria-label="查看神代类的详细档案">
+                                <img src="images/Chibis/Rui_Casual_chibi.png" alt="" loading="lazy" decoding="async">
                                 <span class="preview-chibi-name">类</span>
-                            </div>
+                            </button>
                         </div>
                     </div>
                 </div>
             </article>
 
-            <!-- 25時、ナイトコードで。 -->
-            <article class="unit-card" data-unit="nightcord" tabindex="0" role="button" aria-label="查看25點，Nightcord見。组合成员">
+            <!-- 25时，Nightcord见。 -->
+            <article class="unit-card" data-unit="nightcord">
                 <div class="unit-header-wrap">
-                    <div class="unit-name-text" style="color: #b179ff;">25時、ナイトコードで。</div>
-                    <span class="unit-badge">地下音乐创作团体 · 4人</span>
+                    <div class="unit-header-left">
+                        <div class="unit-name-line">
+                            <span class="unit-name-text" style="color:#b179ff;">25时，Nightcord见。</span>
+                            <span class="unit-match-flag">★ 搜索命中</span>
+                        </div>
+                        <span class="unit-name-jp">25時、ナイトコードで。</span>
+                    </div>
+                    <span class="unit-badge">网络音乐社团 · 4人</span>
                 </div>
                 <div class="unit-body">
                     <div class="unit-logo-box">
-                        <img class="unit-image" src="images/Team Logos/25ji-logo.png" alt="25時、ナイトコードで。 队标">
+                        <img class="unit-image" src="images/Team Logos/25ji-logo.png" alt="25时，Nightcord见。 队标" loading="lazy" decoding="async">
                     </div>
                     <div class="unit-members-preview">
                         <div class="preview-title">
                             <span>团员阵容</span>
-                            <span style="font-size: 11px; opacity: 0.7;">点击卡片进入成员列表 →</span>
+                            <button class="unit-open-btn" type="button">查看成员 →</button>
                         </div>
                         <div class="preview-chibis">
-                            <div class="preview-chibi-item">
-                                <img src="images/Chibis/Kanade_Casual_chibi.png" alt="宵崎奏 Q版">
+                            <button class="preview-chibi-item" type="button" data-char="宵崎奏" aria-label="查看宵崎奏的详细档案">
+                                <img src="images/Chibis/Kanade_Casual_chibi.png" alt="" loading="lazy" decoding="async">
                                 <span class="preview-chibi-name">奏</span>
-                            </div>
-                            <div class="preview-chibi-item">
-                                <img src="images/Chibis/Mafuyu_Casual_chibi.png" alt="朝比奈真冬 Q版">
+                            </button>
+                            <button class="preview-chibi-item" type="button" data-char="朝比奈真冬" aria-label="查看朝比奈真冬的详细档案">
+                                <img src="images/Chibis/Mafuyu_Casual_chibi.png" alt="" loading="lazy" decoding="async">
                                 <span class="preview-chibi-name">真冬</span>
-                            </div>
-                            <div class="preview-chibi-item">
-                                <img src="images/Chibis/Ena_Casual_chibi.png" alt="东云绘名 Q版">
+                            </button>
+                            <button class="preview-chibi-item" type="button" data-char="东云绘名" aria-label="查看东云绘名的详细档案">
+                                <img src="images/Chibis/Ena_Casual_chibi.png" alt="" loading="lazy" decoding="async">
                                 <span class="preview-chibi-name">绘名</span>
-                            </div>
-                            <div class="preview-chibi-item">
-                                <img src="images/Chibis/Mizuki_Casual_chibi.png" alt="晓山瑞希 Q版">
+                            </button>
+                            <button class="preview-chibi-item" type="button" data-char="晓山瑞希" aria-label="查看晓山瑞希的详细档案">
+                                <img src="images/Chibis/Mizuki_Casual_chibi.png" alt="" loading="lazy" decoding="async">
                                 <span class="preview-chibi-name">瑞希</span>
-                            </div>
+                            </button>
                         </div>
                     </div>
                 </div>
             </article>
         </main>
-        <footer class="footer">《世界计划：缤纷舞台！ feat. 初音未来》Original Characters 角色名鉴</footer>
+
+        <footer class="footer">
+            非官方粉丝图集 · 20 位角色 × 5 个组合<br>
+            资料整理自官方角色页与游戏内档案 · 角色与立绘版权归 SEGA / Colorful Palette / Crypton Future Media 所有
+        </footer>
     </div>
 
-    <!-- 组合成员弹窗 -->
-    <div id="characterModal" class="character-modal" style="display: none;">
+    <!-- 视图二：组合成员列表 -->
+    <div id="characterModal" class="character-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="characterUnitTitle">
         <div class="modal-nav">
             <button id="unitBackButton" class="back-button" type="button">← 返回组合总览</button>
         </div>
-        
+
         <div class="character-content">
             <div class="unit-title-box">
-                <h2 class="unit-title">
-                    <img id="unitHeaderLogo" class="unit-title-logo" src="" alt="组合Logo">
-                    <span id="characterUnitTitle">组合成员介绍</span>
+                <h2 class="unit-title" id="characterUnitTitle" tabindex="-1">
+                    <img id="unitHeaderLogo" class="unit-title-logo" alt="" decoding="async">
+                    <span id="characterUnitName">组合成员</span>
                 </h2>
-                <div class="unit-subtitle-hint">点击任意成员卡片，查看详尽官方设定资料与立绘</div>
+                <p class="unit-subtitle-hint" id="unitSubtitleHint">成员介绍 · 点击成员卡片查看详细档案</p>
             </div>
             <div id="characterContainer" class="characters-grid"></div>
         </div>
-        <footer class="footer">《世界计划：缤纷舞台》角色图集</footer>
+
+        <footer class="footer">
+            非官方粉丝图集 · 资料整理自官方角色页与游戏内档案
+        </footer>
     </div>
 
-    <!-- 角色个人详情弹窗 -->
-    <div id="detailModal" class="detail-modal" style="display: none;">
+    <!-- 视图三：角色详情 -->
+    <div id="detailModal" class="detail-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="detailCharacterName">
         <div class="modal-nav">
             <button id="detailBackButton" class="back-button" type="button">← 返回成员列表</button>
         </div>
 
         <div class="detail-content">
-            <!-- 角色头部简介条 -->
             <div class="detail-header-card">
                 <div class="detail-header-left">
-                    <img id="detailChibiAvatar" class="detail-chibi-avatar" src="" alt="角色Q版">
+                    <img id="detailChibiAvatar" class="detail-chibi-avatar" alt="" decoding="async">
                     <div>
-                        <div class="detail-title-text" id="detailCharacterName">角色详细介绍</div>
+                        <h2 class="detail-title-text" id="detailCharacterName" tabindex="-1">角色详细档案</h2>
                         <div class="detail-unit-badge">
                             <span id="detailUnitBadgeText">所属团体</span> ·
                             <span id="detailRoleBadgeText">主要担当</span>
@@ -1165,68 +1628,104 @@
                 </div>
             </div>
 
-            <!-- 立绘大图展示区（直接纯粹展示官方精美立绘） -->
             <div class="detail-illustration-box">
-                <img id="detailImage" class="detail-image" src="" alt="角色立绘">
+                <img id="detailImage" class="detail-image" alt="" decoding="async">
             </div>
 
-            <!-- 详细档案表格（包含全部16项必须信息+背景介绍） -->
-            <div class="table-section-title">官方完整档案信息</div>
+            <h3 class="table-section-title">角色档案（18 项）</h3>
             <table class="detail-table" aria-label="角色详细档案信息">
                 <tbody id="detailTableBody">
-                    <!-- 表格行由 JavaScript 动态生成完整内容 -->
+                    <!-- 由 JavaScript 生成 -->
                 </tbody>
             </table>
+            <p class="detail-note">
+                ※ 身高、学年、年龄采用「升学后（NOW）」数据；角色简介依据官方角色页 NOW 版整理，
+                因此与组队初期的旧版介绍不同。官方未公开的条目（发色、瞳色、喜好食物等）来自游戏内档案，
+                如有出入以游戏内最新资料为准。
+            </p>
 
-            <!-- 互动区域：应援与角色自我介绍视频 -->
             <div class="character-actions">
                 <div class="action-button-group">
                     <button id="cheerButton" class="action-button" type="button">
-                        <span>💖</span> 为角色送应援
+                        <span aria-hidden="true">💖</span> 为角色送应援
                     </button>
                     <a id="listenButton" class="action-button" href="#" target="_blank" rel="noopener noreferrer">
-                        <span>🎙️</span> 聆听角色自我介绍
+                        <span aria-hidden="true">🎙️</span> 聆听角色自我介绍
                     </a>
                 </div>
                 <p id="cheerStatus" aria-live="polite"></p>
             </div>
         </div>
-        <footer class="footer">《世界计划：缤纷舞台》角色图集</footer>
+
+        <footer class="footer">
+            非官方粉丝图集 · 资料整理自官方角色页与游戏内档案
+        </footer>
+    </div>
+
+    <!-- 左下角语言切换：中文 / 日本語 / English -->
+    <div class="lang-switch" id="langSwitch" role="group" aria-label="语言 / Language">
+        <button type="button" class="lang-btn" data-lang="zh" aria-pressed="true">中文</button>
+        <button type="button" class="lang-btn" data-lang="ja" aria-pressed="false">日本語</button>
+        <button type="button" class="lang-btn" data-lang="en" aria-pressed="false">EN</button>
     </div>
 
     <script>
-        // 组合名称与Logo映射
+        'use strict';
+
+        /* ============================================================
+           组合元数据
+           name  : 页面显示名（采用简体中文官方译名）
+           jp    : 日文原名（仅用于组合卡片副标题）
+           alias : 搜索别名（英文 / 日文 / 中文简繁 / 常见简称）
+           ============================================================ */
         const unitMeta = {
             leoneed: {
                 name: "Leo/need",
+                short: "Leo/need",
+                jp: "レオニード",
                 logo: "images/Team Logos/leoneedlogo.png",
-                color: "#4e6ead"
+                aliases: ["leo/need", "leoneed", "leo need", "レオニード", "レオニ"]
             },
             mmj: {
                 name: "MORE MORE JUMP!",
+                short: "MMJ",
+                jp: "モアモアジャンプ！",
                 logo: "images/Team Logos/moremorejumplogo.png",
-                color: "#2ad128"
+                aliases: ["more more jump", "moremorejump", "mmj", "モアモアジャンプ", "モアモア"]
             },
             vbs: {
                 name: "Vivid BAD SQUAD",
+                short: "VBS",
+                jp: "ビビッドバッドスクワッド",
                 logo: "images/Team Logos/vividbadsquadlogo.png",
-                color: "#ff5e3a"
+                aliases: ["vivid bad squad", "vividbadsquad", "vbs", "ビビッドバッドスクワッド", "ビビバス"]
             },
             wxs: {
-                name: "ワンダーランズ×ショウタイム",
+                name: "Wonderlands×Showtime",
+                short: "WxS",
+                jp: "ワンダーランズ×ショウタイム",
                 logo: "images/Team Logos/wxs.png",
-                color: "#ffc500"
+                aliases: ["wonderlands showtime", "wonderlandsshowtime", "wonderlands", "wxs",
+                          "ワンダーランズ", "ワンダーランズショウタイム", "ワンダショ", "奇幻乐园"]
             },
             nightcord: {
-                name: "25時、ナイトコードで。",
+                name: "25时，Nightcord见。",
+                short: "25时",
+                jp: "25時、ナイトコードで。",
                 logo: "images/Team Logos/25ji-logo.png",
-                color: "#9b5dff"
+                aliases: ["25时", "25時", "25点", "25點", "nightcord", "nightcord at 25:00",
+                          "ニーゴ", "25ji", "nightcode", "妮二十五"]
             }
         };
 
-        // 包含萌娘百科等官方资料详尽核实的20位角色数据
+        /* ============================================================
+           角色数据（20 位）
+           · 生日 / 身高 / 学校 / 学年 / 趣味 / 特技 / 苦手：官方角色页 NOW 版
+           · 简介：官方角色页 NOW 版（升学后）内容的整理译文
+           · 代表色：游戏内角色印象色
+           ============================================================ */
         const characterDatabase = {
-            // Leo/need 成员
+            /* ---------- Leo/need ---------- */
             "星乃一歌": {
                 name: "星乃一歌",
                 unitId: "leoneed",
@@ -1237,22 +1736,22 @@
                 age: "16岁（升学后17岁）",
                 hairColor: "黑色 / 蓝黑渐变长发",
                 eyeColor: "灰蓝色",
-                hobbies: "听初音未来的歌、观察种植的仙人掌",
+                hobbies: "听初音未来的歌、观察自己种的仙人掌",
                 specialty: "削苹果皮",
-                weakness: "刺激惊险的游乐设施（绝叫系游乐设施）",
+                weakness: "刺激惊险的游乐设施",
                 favFood: "炒面面包",
                 dislikedFood: "青豌豆",
                 school: "宫益坂女子学园",
                 gradeClass: "1年C班 → 2年A班",
                 unit: "Leo/need",
-                color: "#3366CC",
-                colorName: "拂晓天蓝 / 经典蓝",
-                role: "主唱、吉他手",
+                color: "#33AAEE",
+                colorName: "初音蓝 / 天空蓝",
+                role: "主唱 / 吉他",
                 trainedImg: "images/Char-Trained/Ichika.png",
                 beforeImg: "images/Char-Before/ichika.png",
                 chibiImg: "images/Chibis/Ichika_Casual_chibi.png",
                 video: "https://www.bilibili.com/video/BV1nB2cYfEzj",
-                description: "虽然看起来很酷，其实是对朋友很温柔的少女。与咲希、穗波、志步是青梅竹马，但因为某些原因，与穗波和志步的关系变得不融洽。喜欢听初音未来的歌。在Leo/need中担当主唱和吉他手。"
+                description: "看似冷静，其实非常为朋友着想的温柔少女。与青梅竹马咲希、穗波、志步一起组成乐队 Leo/need，并实现了职业出道的心愿。她在队中担任吉他主唱，为原创曲写词，最近也开始尝试用「初音未来」作曲。"
             },
             "天马咲希": {
                 name: "天马咲希",
@@ -1264,22 +1763,22 @@
                 age: "16岁（升学后17岁）",
                 hairColor: "金发粉色渐变",
                 eyeColor: "粉色",
-                hobbies: "观看时尚/美妆视频、制作串珠饰品",
-                specialty: "设计发型、丢沙包（抛接杂耍）",
-                weakness: "一个人独处（孤独）",
+                hobbies: "看时尚与美妆视频、做串珠饰品",
+                specialty: "设计发型、丢沙包",
+                weakness: "一个人独处",
                 favFood: "零食点心",
                 dislikedFood: "粥",
                 school: "宫益坂女子学园",
                 gradeClass: "1年C班 → 2年B班",
                 unit: "Leo/need",
                 color: "#FFDD44",
-                colorName: "向日葵黄 / 明亮暖黄",
-                role: "键盘手",
+                colorName: "向日葵黄",
+                role: "键盘",
                 trainedImg: "images/Char-Trained/Saki.png",
                 beforeImg: "images/Char-Before/saki.png",
                 chibiImg: "images/Chibis/Saki_Casual_chibi.png",
                 video: "https://www.bilibili.com/video/BV1C1mVYiE32",
-                description: "总是很开朗，总是保持笑容的气氛制造者。因为生来就体弱多病，所以没怎么上初中，但终于康复了，从高中复学。期待着和童年时代的青梅竹马们一起过上快乐的高中生活。在Leo/need中担当键盘手。"
+                description: "永远开朗、笑容不断的氛围制造者，Leo/need 的键盘手。因为体弱多病、连上学都难以做到，她格外珍惜「和大家在一起」「尽情享受青春」，也把「陪在痛苦的人身边」这份心意放进了乐曲创作里。"
             },
             "望月穗波": {
                 name: "望月穗波",
@@ -1291,22 +1790,22 @@
                 age: "16岁（升学后17岁）",
                 hairColor: "浅棕色",
                 eyeColor: "蔚蓝色",
-                hobbies: "遛狗、在家庭菜园种植蔬菜",
-                specialty: "一般家务、游泳",
-                weakness: "画画（独具抽象风味的“画伯”）",
+                hobbies: "遛狗、家庭菜园",
+                specialty: "家事全般、游泳",
+                weakness: "画画（独具抽象风味的「画伯」）",
                 favFood: "苹果派",
                 dislikedFood: "起司（奶酪）",
                 school: "宫益坂女子学园",
                 gradeClass: "1年B班 → 2年A班",
                 unit: "Leo/need",
                 color: "#EE6666",
-                colorName: "暖绯红 / 珊瑚红",
+                colorName: "暖绯红",
                 role: "鼓手",
                 trainedImg: "images/Char-Trained/Honami.png",
                 beforeImg: "images/Char-Before/honami.png",
                 chibiImg: "images/Chibis/Honami_Casual_chibi.png",
                 video: "https://www.bilibili.com/video/BV1nSyBYFE1Z",
-                description: "文武双全的优等生，有着包容他人的温柔。虽然和一歌、咲希、志步是青梅竹马的朋友，但是因为中学时代的某件事，和一歌她们之间产生了距离。在Leo/need中担当鼓手。"
+                description: "文武双全的优等生，拥有包容他人的温柔，Leo/need 的鼓手。因为不想伤害任何人，她曾经很难做出决断；通过乐队活动，她慢慢攒起了决断的勇气，如今正用这份坚强支撑着整支乐队。"
             },
             "日野森志步": {
                 name: "日野森志步",
@@ -1317,26 +1816,26 @@
                 height: "159 cm",
                 age: "16岁（升学后17岁）",
                 hairColor: "浅灰绿 / 银绿色短发",
-                eyeColor: "黄绿色 / 翠绿",
-                hobbies: "去喜欢的小众女子乐团Live、贝斯演奏练习",
+                eyeColor: "黄绿色",
+                hobbies: "去看喜欢的女子乐队 Live、练贝斯",
                 specialty: "写书法",
-                weakness: "应付过分黏人的姐姐（日野森雫）",
+                weakness: "应付过分黏人的姐姐",
                 favFood: "拉面、汉堡肉",
                 dislikedFood: "豆腐",
                 school: "宫益坂女子学园",
-                gradeClass: "1年A班 → 2年A班",
+                gradeClass: "1年A班 → 2年B班",
                 unit: "Leo/need",
                 color: "#BBDD22",
-                colorName: "若草绿 / 鲜嫩黄绿",
-                role: "贝斯手",
+                colorName: "若草绿",
+                role: "贝斯",
                 trainedImg: "images/Char-Trained/Shiho.png",
                 beforeImg: "images/Char-Before/shiho.png",
                 chibiImg: "images/Chibis/Shiho_Casual_chibi.png",
                 video: "https://www.bilibili.com/video/BV1UeSxYJEN3",
-                description: "不合群的一匹狼。埋头于自己喜欢的事情，不管周围的人怎么看都不在意。这样的她，以前也和青梅竹马们一起行动，也很珍惜朋友们，但是......。在Leo/need中担当贝斯手。"
+                description: "Leo/need 的贝斯手。对音乐要求严格、讨厌虚与委蛇，因此常被误解成不合群的一匹狼；但对她来说，一起朝职业梦想奔跑、并让这个愿望得以实现的伙伴们，是最珍贵的存在。"
             },
 
-            // MORE MORE JUMP! 成员
+            /* ---------- MORE MORE JUMP! ---------- */
             "花里实乃理": {
                 name: "花里实乃理",
                 unitId: "mmj",
@@ -1348,7 +1847,7 @@
                 hairColor: "暖棕色",
                 eyeColor: "灰褐色",
                 hobbies: "模仿偶像舞步、写日记、照顾动物",
-                specialty: "构思自我宣传词/应援口号",
+                specialty: "构思自我宣传词",
                 weakness: "冷静行动",
                 favFood: "三文鱼（鲑鱼）",
                 dislikedFood: "西兰花",
@@ -1356,13 +1855,13 @@
                 gradeClass: "1年A班 → 2年D班",
                 unit: "MORE MORE JUMP!",
                 color: "#FFCCAA",
-                colorName: "暖杏色 / 柔粉橙",
+                colorName: "暖杏色",
                 role: "偶像",
                 trainedImg: "images/Char-Trained/Minori.png",
                 beforeImg: "images/Char-Before/minori.png",
                 chibiImg: "images/Chibis/Minori_Casual_chibi.png",
                 video: "https://www.bilibili.com/video/BV1SSDhYqEzH",
-                description: "MORE MORE JUMP!的一员。性格单纯的努力家，自从看到偶像组合『ASRUN』的桐谷遥之后，一直以偶像为目标，虽然参加了各种各样的试镜，但是一直落选。"
+                description: "纯粹又拼命的努力家。她曾是 MORE MORE JUMP! 里唯一没有偶像经验的人，通过一次次活动被粉丝接纳，最终实现了单独 Live 的心愿。如今她以「能举办巨蛋 Live 的国民偶像」为目标继续活动。"
             },
             "桐谷遥": {
                 name: "桐谷遥",
@@ -1374,7 +1873,7 @@
                 age: "16岁（升学后17岁）",
                 hairColor: "深海蓝短发",
                 eyeColor: "宝蓝色",
-                hobbies: "收集企鹅周边商品",
+                hobbies: "收集企鹅周边",
                 specialty: "打篮球",
                 weakness: "偷懒懈怠",
                 favFood: "所有甜食",
@@ -1383,13 +1882,13 @@
                 gradeClass: "1年C班 → 2年D班",
                 unit: "MORE MORE JUMP!",
                 color: "#99CCFF",
-                colorName: "纯净晴蓝 / 天蓝色",
+                colorName: "纯净晴蓝",
                 role: "偶像",
                 trainedImg: "images/Char-Trained/Haruka.png",
                 beforeImg: "images/Char-Before/haruka.png",
                 chibiImg: "images/Chibis/Haruka_Casual_chibi.png",
                 video: "https://www.bilibili.com/video/BV1qAmtYaEyF",
-                description: "MORE MORE JUMP!的一员。曾经隶属于国民人气偶像组合『ASRUN』。是有着超凡魅力的存在，在团体内也拥有超高的人气。但是，以团体解散为契机，她从娱乐圈隐退，回到了实乃理所就读的宫益坂女子学园。"
+                description: "曾是国民偶像组合『ASRUN』的顶级偶像。以 MORE MORE JUMP! 的单独 Live 为契机，她重新燃起对偶像活动的热情，并与实乃理一起转入单位制学校，决定再一次全力投入偶像事业。"
             },
             "桃井爱莉": {
                 name: "桃井爱莉",
@@ -1403,20 +1902,20 @@
                 eyeColor: "玫红粉瞳",
                 hobbies: "偶像研究、逛街购物",
                 specialty: "烹饪料理、照顾小孩子",
-                weakness: "抚摸猫咪（猫毛过敏）、受气压影响的食品包装",
+                weakness: "抚摸猫咪（猫毛过敏）",
                 favFood: "日式点心（和果子）",
                 dislikedFood: "动物肝脏",
                 school: "宫益坂女子学园",
                 gradeClass: "2年D班 → 3年E班",
                 unit: "MORE MORE JUMP!",
                 color: "#FFAACC",
-                colorName: "甜美桃粉 / 活力樱粉",
+                colorName: "甜美桃粉",
                 role: "偶像",
                 trainedImg: "images/Char-Trained/Airi.png",
                 beforeImg: "images/Char-Before/airi.png",
                 chibiImg: "images/Chibis/Airi_Casual_chibi.png",
                 video: "https://www.bilibili.com/video/BV1ucUZYuECo",
-                description: "MORE MORE JUMP!的一员。曾经在各种节目中大受欢迎的前偶像。有着自信、强势的一面，同时对偶像的工作有着爱、热情和强烈的自豪感。现在，因为某种原因辞去了事务所的工作，偶像也引退了。对后辈有些严厉，但也是一个可靠的人。"
+                description: "偶像组合『QT』的前成员。她用对偶像工作的热情与骄傲激励同伴，是团队里负责「点火」的人；企划与日程管理能力也很强，主动承担着没有事务所的 MORE MORE JUMP! 必不可少的各项事务。"
             },
             "日野森雫": {
                 name: "日野森雫",
@@ -1428,25 +1927,25 @@
                 age: "17岁（升学后18岁）",
                 hairColor: "浅天青色长发",
                 eyeColor: "晶莹水蓝",
-                hobbies: "阅读图书、散步",
+                hobbies: "阅读、散步",
                 specialty: "弓道、刺绣",
-                weakness: "看地图认路（路痴）、操作机械/电子仪器",
+                weakness: "看地图认路、操作机械与电子仪器",
                 favFood: "乌冬面、豆皮",
                 dislikedFood: "所有辛辣刺激的食物",
                 school: "宫益坂女子学园",
                 gradeClass: "2年D班 → 3年E班",
                 unit: "MORE MORE JUMP!",
                 color: "#99EEDD",
-                colorName: "薄荷青 / 水漾青绿",
+                colorName: "薄荷青",
                 role: "偶像",
                 trainedImg: "images/Char-Trained/Shizuku.png",
                 beforeImg: "images/Char-Before/shizuku.png",
                 chibiImg: "images/Chibis/Shizuku_Casual_chibi.png",
                 video: "https://www.bilibili.com/video/BV1UdzbYvEr4",
-                description: "MORE MORE JUMP!的一员。曾经隶属于人气偶像组合“Cheerful＊Days”（截止至主线第10话）。外表能让人感受到神秘的成人魅力，以此俘获了粉丝们的心。但是，也曾被组合的伙伴嫉妒。与爱莉是练习生时代的同期生，很喜欢妹妹日野森志步。是一个很成熟的人,长得也很漂亮。"
+                description: "至今仍很受欢迎的偶像组合『Cheerful＊Days』的前中心成员。她曾因与旧队友相处不顺而退出，心里一直留着疙瘩；以 MORE MORE JUMP! 首次电视出演时的同台为契机，双方多少和解，她也开始向前看。"
             },
 
-            // Vivid BAD SQUAD 成员
+            /* ---------- Vivid BAD SQUAD ---------- */
             "小豆泽心羽": {
                 name: "小豆泽心羽",
                 unitId: "vbs",
@@ -1460,19 +1959,19 @@
                 hobbies: "照料父亲饲养的宠物蛇",
                 specialty: "拍照摄影",
                 weakness: "站在众人注目的公众视线前",
-                favFood: "寿桃包、芝麻团子（煎堆）",
+                favFood: "寿桃包、芝麻团子",
                 dislikedFood: "醋拌凉菜",
                 school: "宫益坂女子学园",
                 gradeClass: "1年A班 → 2年A班",
                 unit: "Vivid BAD SQUAD",
                 color: "#FF6699",
-                colorName: "棉花糖粉 / 桃红",
-                role: "Vivid BAD SQUAD 成员（Vivids）",
+                colorName: "棉花糖粉",
+                role: "歌手 · Vivids",
                 trainedImg: "images/Char-Trained/Kohane.png",
                 beforeImg: "images/Char-Before/kohane.png",
                 chibiImg: "images/Chibis/Kohane_Unit_chibi.png",
                 video: "https://www.bilibili.com/video/BV1uciiY1EeW",
-                description: "Vivid BAD SQUAD的成员(Vivids)。喜欢吃寿桃包和芝麻团子，不喜欢醋拌凉菜。是个非常腼腆，对自己没有自信的少女。有一天，在偶然路过的一间咖啡音乐酒吧内，看到了白石杏和其他演奏者的表演。对音乐认知仅限于学校音乐课的心羽被从未听过的rap和激烈节奏的音乐震撼，从而被这样的说唱音乐的魅力所俘获。"
+                description: "原本十分怯懦。通过与同伴互相切磋，以及传说活动成员之一·大河的门下修行，她逐渐对自己的歌声有了自信。虽然曾被打倒而心有不甘，她还是把这份不甘化成力量重新站起，再次宣言要超越『RAD WEEKEND』。"
             },
             "白石杏": {
                 name: "白石杏",
@@ -1482,10 +1981,10 @@
                 zodiac: "狮子座",
                 height: "160 cm",
                 age: "16岁（升学后17岁）",
-                hairColor: "渐变色发（黑发渐变宝蓝）",
+                hairColor: "渐变发（黑发渐变宝蓝）",
                 eyeColor: "耀金瞳",
                 hobbies: "种植薄荷盆栽",
-                specialty: "冲调香浓咖啡与红茶",
+                specialty: "冲调咖啡与红茶",
                 weakness: "幽灵鬼怪、恐怖怪谈",
                 favFood: "朗姆葡萄干冰淇淋",
                 dislikedFood: "番茄（西红柿）",
@@ -1493,13 +1992,13 @@
                 gradeClass: "1年A班 → 2年A班",
                 unit: "Vivid BAD SQUAD",
                 color: "#00BBDD",
-                colorName: "海天蔚蓝 / 明青色",
-                role: "Vivid BAD SQUAD 成员（Vivids）",
+                colorName: "海天蔚蓝",
+                role: "歌手 · Vivids",
                 trainedImg: "images/Char-Trained/An.png",
                 beforeImg: "images/Char-Before/an.png",
                 chibiImg: "images/Chibis/An_Unit_chibi.png",
                 video: "https://www.bilibili.com/video/BV1VYqhYGEU6",
-                description: "Vivid BAD SQUAD的成员(Vivids)。喜欢吃朗姆味葡萄干冰淇淋，不喜欢吃番茄。性格直爽，做事积极果断，好胜不服输，但实际上是很会照顾他人感受的人。父亲以前是音乐家，在涩谷的街道上很有名。从中学时期就梦想着自己能超越父亲曾经的LIVE活动“RAD WEEKEND”，举办最棒的演出。"
+                description: "开朗直率、WEEKEND GARAGE 的招牌女孩。在为超越父辈的传说活动『RAD WEEKEND』而活动的过程中，她得知了憧憬之人·凪的秘密并深受冲击；但在听父亲讲述凪的心意后重新振作，再次立誓要超越传说。"
             },
             "东云彰人": {
                 name: "东云彰人",
@@ -1513,20 +2012,20 @@
                 eyeColor: "青朽叶色（青绿褐）",
                 hobbies: "潮流时尚搭配",
                 specialty: "节奏口技（Beatbox）",
-                weakness: "狗（以及狼）",
+                weakness: "狗",
                 favFood: "美式松饼、芝士蛋糕",
                 dislikedFood: "胡萝卜",
                 school: "神山高校",
                 gradeClass: "1年C班 → 2年A班",
                 unit: "Vivid BAD SQUAD",
                 color: "#FF7722",
-                colorName: "热情炽橙 / 暖阳橙",
-                role: "Vivid BAD SQUAD 成员（BAD DOGS）",
+                colorName: "热情炽橙",
+                role: "歌手 · BAD DOGS",
                 trainedImg: "images/Char-Trained/Akito.png",
                 beforeImg: "images/Char-Before/akito.png",
                 chibiImg: "images/Chibis/Akito_Unit_chibi.png",
                 video: "https://www.bilibili.com/video/BV1M1BNYwEuW",
-                description: "Vivid BAD SQUAD的成员(BAD DOGS)。喜欢吃的食物是薄饼和芝士蛋糕，不喜欢吃的食物是胡萝卜。憧憬着杏的父亲，从中学时代便开始进行音乐活动。与搭档青柳冬弥以“BAD DOGS”的名义在Live House等地演唱。乍看之下，好像很懂得待人接物，但其实是两幅面孔。"
+                description: "以超越传说活动『RAD WEEKEND』为梦、进行近乎血汗般练习的努力家。他一度因『RAD WEEKEND』背后秘密的重量而止步，最终还是凭对梦想的执念奋起，决定继续挑战下去。"
             },
             "青柳冬弥": {
                 name: "青柳冬弥",
@@ -1538,25 +2037,25 @@
                 age: "16岁（升学后17岁）",
                 hairColor: "阴阳双色（深青蓝 / 浅冰蓝）",
                 eyeColor: "冷灰青色",
-                hobbies: "阅读图书书籍",
-                specialty: "钢琴演奏、小提琴演奏",
+                hobbies: "阅读",
+                specialty: "钢琴、小提琴",
                 weakness: "身处高处（恐高症）",
                 favFood: "咖啡、曲奇饼干",
-                dislikedFood: "乌贼（鱿鱼/墨鱼）",
+                dislikedFood: "乌贼（鱿鱼）",
                 school: "神山高校",
                 gradeClass: "1年B班 → 2年B班",
                 unit: "Vivid BAD SQUAD",
                 color: "#0077DD",
-                colorName: "深邃群青 / 钴蓝",
-                role: "Vivid BAD SQUAD 成员（BAD DOGS）",
+                colorName: "深邃群青",
+                role: "歌手 · BAD DOGS",
                 trainedImg: "images/Char-Trained/Toya.png",
                 beforeImg: "images/Char-Before/toya.png",
                 chibiImg: "images/Chibis/Toya_Unit_chibi.png",
                 video: "https://www.bilibili.com/video/BV1nxkFY5ETK",
-                description: "Vivid BAD SQUAD的成员(BAD DOGS)。他有一个严格的从事古典音乐的父亲，从小接受英才教育，所以音乐品味超群。但是，因为讨厌父亲的施压，所以开始了街头音乐活动。冬弥沉默寡言，但意志坚强。他和彰人身边的其他人沟通起来有困难。有时冬弥在试图和别人说话时，会无意中产生误解。"
+                description: "出身古典音乐名门的秀才。他以超越『RAD WEEKEND』为目标，也开始挑战作曲。虽然被传说的真正高度所震撼，他还是带着过往的经验，希望与同伴一起跨过高墙，看到墙后的景色。"
             },
 
-            // Wonderlands × Showtime 成员
+            /* ---------- Wonderlands×Showtime ---------- */
             "天马司": {
                 name: "天马司",
                 unitId: "wxs",
@@ -1567,22 +2066,22 @@
                 age: "17岁（升学后18岁）",
                 hairColor: "渐变发（明黄渐变粉橙）",
                 eyeColor: "金橘红瞳",
-                hobbies: "鉴赏音乐剧、制作舞台剧服装",
-                specialty: "任何时刻即刻摆出潇洒姿势、弹钢琴",
-                weakness: "各类多足昆虫与虫子",
+                hobbies: "鉴赏音乐剧、制作舞台服装",
+                specialty: "随时能摆出潇洒姿势、弹钢琴",
+                weakness: "各类虫子（尤其多足昆虫）",
                 favFood: "意式水煮鱼（Acqua Pazza）、生姜烧肉",
                 dislikedFood: "青椒",
                 school: "神山高校",
                 gradeClass: "2年A班 → 3年C班",
-                unit: "ワンダーランズ×ショウタイム",
+                unit: "Wonderlands×Showtime",
                 color: "#FFBB00",
-                colorName: "璀璨金星黄 / 明星耀黄",
-                role: "舞台表演者 / 团长",
+                colorName: "金星黄",
+                role: "团长 / 演员",
                 trainedImg: "images/Char-Trained/Tsukasa.png",
                 beforeImg: "images/Char-Before/tsukasa.png",
                 chibiImg: "images/Chibis/Tsukasa_Casual_chibi.png",
                 video: "https://www.bilibili.com/video/BV1q86JYxEd7",
-                description: "Wonderlands×Showtime的一员。自从司观看了他最喜欢的剧团演出后，他就梦想着成为一个世界级剧团的明星。有一段时间，他被雇到一个主题公园兼职，但他被分配到的凤凰仙境的舞台招揽顾客。直到一天，他遇到了想让舞台重获昔日辉煌的凤笑梦。过于自信，爱引人注目，亦容易得意忘形。憧憬小时候看过的剧团表演，以成为世界第一的艺员为目标。经常鼓励和照顾体弱多病的妹妹天马咲希，也让她看到作为哥哥值得信赖的一面。"
+                description: "以世界第一明星为目标的 Wonderlands×Showtime 座长。作为演员积累各种经验的过程中，他越来越想看看更广阔的世界、学到更多，最终决定与同伴一起走出 Wonder Stage，迈向下一步。"
             },
             "凤笑梦": {
                 name: "凤笑梦",
@@ -1595,21 +2094,21 @@
                 hairColor: "鲜亮粉色短发",
                 eyeColor: "糖果粉瞳",
                 hobbies: "在城镇与游乐园周边探险",
-                specialty: "杂技特技、无论吃什么都能吃得津津有味",
+                specialty: "杂技、无论吃什么都能吃得津津有味",
                 weakness: "黄昏时分的落寞氛围",
                 favFood: "鲷鱼烧",
-                dislikedFood: "完全没有（从不挑食！）",
+                dislikedFood: "完全没有（从不挑食）",
                 school: "宫益坂女子学园",
                 gradeClass: "1年B班 → 2年B班",
-                unit: "ワンダーランズ×ショウタイム",
+                unit: "Wonderlands×Showtime",
                 color: "#FF66BB",
-                colorName: "旺达霍伊粉 / 奇迹粉",
-                role: "舞台表演者",
+                colorName: "奇迹粉",
+                role: "演员",
                 trainedImg: "images/Char-Trained/Emu.png",
                 beforeImg: "images/Char-Before/emu.png",
                 chibiImg: "images/Chibis/Emu_Casual_chibi.png",
                 video: "https://www.bilibili.com/video/BV1iBr8Y9EVE",
-                description: "Wonderlands×Showtime的一员。某一天笑梦遇到了被分配到凤凰仙境的舞台招揽顾客的司，笑梦想让舞台重获昔日辉煌。非常开朗，天真烂漫的性格。因为一想起来就马上采取行动，所以常常不知不觉地把周围的人卷进来。为了让凤凰仙境冷清的舞台复活，她在寻找能和她一起站在舞台上的人。"
+                description: "极度开朗、天真烂漫。她的梦想是守护祖父留下的凤凰仙境，也早有觉悟：与追梦的 Wonderlands×Showtime 伙伴终有分别之日。但在哥哥们与同伴的推动下，她决定为了修行走出这里。"
             },
             "草薙宁宁": {
                 name: "草薙宁宁",
@@ -1622,21 +2121,21 @@
                 hairColor: "薄荷灰绿长发",
                 eyeColor: "淡紫灰瞳",
                 hobbies: "对战竞技游戏、观看音乐剧与电影",
-                specialty: "舞台歌唱、各类机械电子操作",
-                weakness: "拥挤嘈杂、人头攒动的地方",
+                specialty: "歌唱、机械操作",
+                weakness: "拥挤嘈杂、人多的场所",
                 favFood: "葡萄柚（西柚）",
                 dislikedFood: "薄荷味的食物",
                 school: "神山高校",
                 gradeClass: "1年B班 → 2年A班",
-                unit: "ワンダーランズ×ショウタイム",
+                unit: "Wonderlands×Showtime",
                 color: "#33DD99",
-                colorName: "薄荷翠绿 / 清新碧绿",
-                role: "舞台表演者",
+                colorName: "薄荷翠绿",
+                role: "演员 / 歌手",
                 trainedImg: "images/Char-Trained/Nene.png",
                 beforeImg: "images/Char-Before/nene.png",
                 chibiImg: "images/Chibis/Nene_Casual_chibi.png",
                 video: "https://www.bilibili.com/video/BV1h6cieLEJi",
-                description: "Wonderlands×Showtime的一员。被神代类推荐加入成员的毒舌少女。在音乐剧舞台的那个歌声是一个高中生无法想象的水平。但是，不知为何在天马司和凤笑梦面前没有出现，而是操作着名为“宁宁号”的机器人，让它代替自己站在舞台上。"
+                description: "以活跃于世界的音乐剧演员为目标的少女。在一次公演排练中，她的歌唱自信一度被击碎；但也因此重新确认了自己对歌唱的强烈心意。今后她决心与同伴一起走向更广阔的世界，吸收更多东西。"
             },
             "神代类": {
                 name: "神代类",
@@ -1648,25 +2147,25 @@
                 age: "17岁（升学后18岁）",
                 hairColor: "青紫双色（紫发带青色挑染）",
                 eyeColor: "金琥珀瞳",
-                hobbies: "构想演出构思、编导气球艺术",
+                hobbies: "构想演出、做气球艺术",
                 specialty: "机械装置与机器人发明",
-                weakness: "打扫房间、千篇一律的单调作业",
-                favFood: "汽水糖（波子汽水糖）",
+                weakness: "打扫、单调重复的作业",
+                favFood: "波子汽水糖",
                 dislikedFood: "所有蔬菜",
                 school: "神山高校",
                 gradeClass: "2年B班 → 3年C班",
-                unit: "ワンダーランズ×ショウタイム",
+                unit: "Wonderlands×Showtime",
                 color: "#BB88EE",
-                colorName: "幻魅亮紫 / 薰衣草紫",
-                role: "舞台表演者、机械发明、演出构想",
+                colorName: "薰衣草紫",
+                role: "演出家 / 演员",
                 trainedImg: "images/Char-Trained/Rui.png",
                 beforeImg: "images/Char-Before/rui.png",
                 chibiImg: "images/Chibis/Rui_Casual_chibi.png",
                 video: "https://www.bilibili.com/video/BV11YwpeiEz2",
-                description: "Wonderlands×Showtime的一员。我行我素的天才。与草薙宁宁是邻居，也是青梅竹马。会亲自动手设计表演的流程，并活用自己的机器发明技术能制作表演用的机器人。因为有独特的想法，所以经常被周围的人当做怪人看待。"
+                description: "我行我素的天才演出家。过去他独自办秀，后来在愿意接受他演出的 Wonderlands×Showtime 中找到了归宿，并寻找一条不必为梦想各奔东西的路。最终，他促成了「全员一起继续演出、也继续追梦」这一最好的结局。"
             },
 
-            // 25時、ナイトコードで。 成员
+            /* ---------- 25时，Nightcord见。 ---------- */
             "宵崎奏": {
                 name: "宵崎奏",
                 unitId: "nightcord",
@@ -1677,22 +2176,22 @@
                 age: "17岁（升学后18岁）",
                 hairColor: "银白色披肩长发",
                 eyeColor: "冰蓝色",
-                hobbies: "搜寻聆听各类音乐、欣赏电影/漫画/动画/美术",
-                specialty: "凭借身体感觉精确测定时间",
-                weakness: "刺眼的阳光直射、做家务料理",
+                hobbies: "搜集并聆听各种音乐、看电影漫画动画与美术作品",
+                specialty: "凭感觉准确计时",
+                weakness: "刺眼的阳光、做家务",
                 favFood: "方便杯面、罐头食品",
-                dislikedFood: "香菜、纳豆等气味独特的刺激性食物",
-                school: "通信制高中（函授高中）",
+                dislikedFood: "香菜、纳豆等气味独特的食物",
+                school: "通信制高中",
                 gradeClass: "高中2年级 → 高中3年级",
-                unit: "25時、ナイトコードで。",
+                unit: "25时，Nightcord见。",
                 color: "#BB6688",
-                colorName: "烟熏玫粉 / 康乃馨暗粉",
+                colorName: "烟熏玫粉",
                 role: "作曲",
                 trainedImg: "images/Char-Trained/Kanade.png",
                 beforeImg: "images/Char-Before/kanade.png",
                 chibiImg: "images/Chibis/Kanade_Casual_chibi.png",
                 video: "https://www.bilibili.com/video/BV15MfnYNEnC",
-                description: "自己创作的音乐让最重要的人（父亲）陷入绝望而受到严重的心理创伤。经历此事后认为自己必须创作出更多「令人幸福的歌曲」而创立了25时。在组内主要负责作曲。"
+                description: "看到真冬对自己的曲子反应越来越多，她由衷高兴；但某天却被真冬的母亲要求「离开真冬」。她从对方的言行中感到违和，拒绝了这一要求，选择留在真冬身边。"
             },
             "朝比奈真冬": {
                 name: "朝比奈真冬",
@@ -1703,23 +2202,23 @@
                 height: "162 cm",
                 age: "17岁（升学后18岁）",
                 hairColor: "深紫色单马尾",
-                eyeColor: "渐变双色瞳（上部紫瞳渐变幽蓝）",
+                eyeColor: "渐变双色瞳（紫渐变幽蓝）",
                 hobbies: "观察水族箱",
-                specialty: "流畅的英语会话交流",
-                weakness: "不知道（表达与感知真实自我的情绪）",
-                favFood: "母亲亲手做的料理（虽然失去了味觉体验）",
-                dislikedFood: "不知道（味觉好恶感知丧失）",
+                specialty: "流畅的英语会话",
+                weakness: "不知道（难以表达与感知真实情绪）",
+                favFood: "母亲亲手做的料理（已难以体会味道）",
+                dislikedFood: "不知道",
                 school: "宫益坂女子学园",
                 gradeClass: "2年B班 → 3年B班",
-                unit: "25時、ナイトコードで。",
+                unit: "25时，Nightcord见。",
                 color: "#8888CC",
-                colorName: "夜空幽紫 / 深雾紫",
-                role: "作词、混音",
+                colorName: "夜空幽紫",
+                role: "作词",
                 trainedImg: "images/Char-Trained/Mafuyu.png",
                 beforeImg: "images/Char-Before/mafuyu.png",
                 chibiImg: "images/Chibis/Mafuyu_Casual_chibi.png",
                 video: "https://www.bilibili.com/video/BV1CoFXeyE6Z",
-                description: "在25時、ナイトコードで。主要负责作词和混音，偶尔会参与作曲。奏听过真冬以前写过的歌后向真冬发出邀请，真冬也受邀加入25时。聪明又幽默，是一个值得任何人信任的优等生。表面上像是完美的优等生……？"
+                description: "在『25时，Nightcord见。』担任作词。她一直被母亲要求做「好孩子」，逐渐找不到自己，却在音乐活动中把社团当成了容身之处。然而连这处容身之地也几乎被夺走，她终于感到极限，离家出走向奏求助。"
             },
             "东云绘名": {
                 name: "东云绘名",
@@ -1731,22 +2230,22 @@
                 age: "17岁（升学后18岁）",
                 hairColor: "温暖焦糖栗棕色",
                 eyeColor: "明亮琥珀棕瞳",
-                hobbies: "画画、自拍上传社交网络并检索网络评价",
-                specialty: "精通时尚饰品搭配、盲测品鉴食材",
-                weakness: "清晨早起",
+                hobbies: "画画、自拍并上传社交网络、搜自己的评价",
+                specialty: "研究时尚小物、盲测食材",
+                weakness: "早起",
                 favFood: "芝士蛋糕、美式松饼",
                 dislikedFood: "胡萝卜",
                 school: "神山高校（夜间定时制）",
                 gradeClass: "2年D班 → 3年D班",
-                unit: "25時、ナイトコードで。",
+                unit: "25时，Nightcord见。",
                 color: "#CCAA88",
-                colorName: "奶咖暖棕 / 焦糖驼色",
-                role: "插画 / 插画师",
+                colorName: "奶咖暖棕",
+                role: "插画",
                 trainedImg: "images/Char-Trained/Ena.png",
                 beforeImg: "images/Char-Before/ena.png",
                 chibiImg: "images/Chibis/Ena_Casual_chibi.png",
                 video: "https://www.bilibili.com/video/BV1aRK3e4Emx",
-                description: "25時、ナイトコードで。的画师。在网上投稿的作品被奏发现并受邀加入25时，负责画MV用的插图。父亲是一位知名画家，作为他的女儿，绘名想被别人认同的感情很强烈，所以在社交网站上投稿并宣传自己的作品。用于发自拍的账号有很多人关注，而投稿绘画的账号却没有什么起色，时常会陷入作为画家的女儿却似乎没有绘画才能的苦恼。"
+                description: "在『25时，Nightcord见。』担任插画。她为缺乏绘画才能而苦恼，却仍坚持努力，拥有即使被苛刻评价也不停笔的强韧。她性格直率，曾因真冬不肯向母亲表达心意而焦躁，但也看到了真冬自相遇以来的变化，作为同伴认真守望。"
             },
             "晓山瑞希": {
                 name: "晓山瑞希",
@@ -1758,26 +2257,25 @@
                 age: "16岁（升学后17岁）",
                 hairColor: "甜美樱花粉（高侧单马尾）",
                 eyeColor: "清澈粉瞳",
-                hobbies: "收集制作MV的影像素材、拼贴画艺术制作",
-                specialty: "手工服装改裁与服饰设计",
+                hobbies: "收集 MV 影像素材、拼贴画创作",
+                specialty: "改造与设计服装",
                 weakness: "刚出锅烫嘴的食物（猫舌）",
                 favFood: "咖喱饭、炸薯条",
                 dislikedFood: "蘑菇等各类菌类",
                 school: "神山高校",
                 gradeClass: "1年A班 → 2年B班",
-                unit: "25時、ナイトコードで。",
+                unit: "25时，Nightcord见。",
                 color: "#DDAACC",
-                colorName: "梦幻浅紫粉 / 浪漫粉紫",
-                role: "MV制作",
+                colorName: "梦幻浅紫粉",
+                role: "MV 制作",
                 trainedImg: "images/Char-Trained/Mizuki.png",
                 beforeImg: "images/Char-Before/mizuki.png",
                 chibiImg: "images/Chibis/Mizuki_Casual_chibi.png",
                 video: "https://www.bilibili.com/video/BV1roAqegEpS",
-                description: "25時、ナイトコードで。的MV师。瑞希喜欢所有可爱的事物，喜欢做拼贴画，有一天心血来潮觉得让拼贴画动起来一定会更可爱，于是开始学习用软件制作视频。偶然听到了奏的歌曲并被深深吸引，为其制作了MV投稿。奏在看过MV后邀请瑞希一同创作，瑞希也受邀加入了25时，和绘名差不多同一时期入团。有一个社团成员都不知道的秘密。"
+                description: "在『25时，Nightcord见。』担任 MV。她担心着与母亲关系不断恶化的真冬，却因自己也无法面对自身的秘密而感到无力。但正是这段经历让她明白「逃避」也能带来收获，于是对真冬说「逃开也没关系」。"
             }
         };
 
-        // 按组合划分的角色列表
         const unitToCharacters = {
             leoneed: ["星乃一歌", "天马咲希", "望月穗波", "日野森志步"],
             mmj: ["花里实乃理", "桐谷遥", "桃井爱莉", "日野森雫"],
@@ -1786,240 +2284,1061 @@
             nightcord: ["宵崎奏", "朝比奈真冬", "东云绘名", "晓山瑞希"]
         };
 
-        let currentUnitId = null;
-        let currentCharacterName = null;
+        /* ============================================================
+           多语言数据
+           · zh 直接使用 characterDatabase 中的原始字段
+           · ja / en 只覆盖需要翻译的字段，其余通过回退取 zh
+           · 角色键统一使用 characterDatabase 的中文名，避免重命名引起引用错位
+           ============================================================ */
+        const SUPPORTED_LANGS = ['zh', 'ja', 'en'];
+        const LANG_KEY = 'pjsk-rework-lang';
+        let currentLang = 'zh';
+        try {
+            const savedLang = localStorage.getItem(LANG_KEY);
+            if (SUPPORTED_LANGS.indexOf(savedLang) !== -1) currentLang = savedLang;
+        } catch (error) {
+            /* 隐私模式：保持默认中文 */
+        }
 
-        // 搜索功能实现
-        function searchCharacter() {
-            const searchInput = document.getElementById('characterSearch');
-            const clearBtn = document.getElementById('clearSearchBtn');
-            const searchTerm = searchInput.value.trim().toLowerCase();
-            const unitCards = document.querySelectorAll('.unit-card');
-            const searchResults = document.getElementById('searchResults');
-            const suggestionsPanel = document.getElementById('searchSuggestions');
-            const searchChipsContainer = document.getElementById('searchChips');
-            
-            clearBtn.style.display = searchTerm ? 'block' : 'none';
+        const MONTHS_EN = ['January', 'February', 'March', 'April', 'May', 'June',
+                           'July', 'August', 'September', 'October', 'November', 'December'];
 
-            unitCards.forEach(card => card.classList.remove('highlighted'));
-            searchResults.innerHTML = '';
-            searchChipsContainer.innerHTML = '';
-            suggestionsPanel.style.display = 'none';
-            
-            if (!searchTerm) return;
-            
-            let matchedUnits = new Set();
-            let matchedCharacters = [];
-            
-            for (const charName in characterDatabase) {
-                const char = characterDatabase[charName];
-                const matchName = char.name.toLowerCase().includes(searchTerm) ||
-                                  char.realName.toLowerCase().includes(searchTerm);
-                const matchUnit = char.unit.toLowerCase().includes(searchTerm);
-                const matchFood = char.favFood.toLowerCase().includes(searchTerm);
-                const matchHobby = char.hobbies.toLowerCase().includes(searchTerm);
-                const matchSpecialty = char.specialty.toLowerCase().includes(searchTerm);
-                const matchSchool = char.school.toLowerCase().includes(searchTerm);
+        /* Q 版 / 卡片上的短名 */
+        const SHORT_NAMES = {
+            zh: {
+                "星乃一歌": "一歌", "天马咲希": "咲希", "望月穗波": "穗波", "日野森志步": "志步",
+                "花里实乃理": "实乃理", "桐谷遥": "遥", "桃井爱莉": "爱莉", "日野森雫": "雫",
+                "小豆泽心羽": "心羽", "白石杏": "杏", "东云彰人": "彰人", "青柳冬弥": "冬弥",
+                "天马司": "司", "凤笑梦": "笑梦", "草薙宁宁": "宁宁", "神代类": "类",
+                "宵崎奏": "奏", "朝比奈真冬": "真冬", "东云绘名": "绘名", "晓山瑞希": "瑞希"
+            },
+            ja: {
+                "星乃一歌": "一歌", "天马咲希": "咲希", "望月穗波": "穂波", "日野森志步": "志歩",
+                "花里实乃理": "みのり", "桐谷遥": "遥", "桃井爱莉": "愛莉", "日野森雫": "雫",
+                "小豆泽心羽": "こはね", "白石杏": "杏", "东云彰人": "彰人", "青柳冬弥": "冬弥",
+                "天马司": "司", "凤笑梦": "えむ", "草薙宁宁": "寧々", "神代类": "類",
+                "宵崎奏": "奏", "朝比奈真冬": "まふゆ", "东云绘名": "絵名", "晓山瑞希": "瑞希"
+            },
+            en: {
+                "星乃一歌": "Ichika", "天马咲希": "Saki", "望月穗波": "Honami", "日野森志步": "Shiho",
+                "花里实乃理": "Minori", "桐谷遥": "Haruka", "桃井爱莉": "Airi", "日野森雫": "Shizuku",
+                "小豆泽心羽": "Kohane", "白石杏": "An", "东云彰人": "Akito", "青柳冬弥": "Toya",
+                "天马司": "Tsukasa", "凤笑梦": "Emu", "草薙宁宁": "Nene", "神代类": "Rui",
+                "宵崎奏": "Kanade", "朝比奈真冬": "Mafuyu", "东云绘名": "Ena", "晓山瑞希": "Mizuki"
+            }
+        };
 
-                if (matchName || matchUnit || matchFood || matchHobby || matchSpecialty || matchSchool) {
-                    matchedUnits.add(char.unitId);
-                    matchedCharacters.push(char);
+        /* 组合名 / 简称 / 定位标签（官方日文名与官方英文名） */
+        const UNIT_I18N = {
+            zh: {
+                leoneed:   { name: "Leo/need", short: "Leo/need", badge: "乐队组合 · 4人" },
+                mmj:       { name: "MORE MORE JUMP!", short: "MMJ", badge: "偶像组合 · 4人" },
+                vbs:       { name: "Vivid BAD SQUAD", short: "VBS", badge: "街头音乐组合 · 4人" },
+                wxs:       { name: "Wonderlands×Showtime", short: "WxS", badge: "音乐剧团组合 · 4人" },
+                nightcord: { name: "25时，Nightcord见。", short: "25时", badge: "网络音乐社团 · 4人" }
+            },
+            ja: {
+                leoneed:   { name: "Leo/need", short: "Leo/need", badge: "バンド · 4人" },
+                mmj:       { name: "MORE MORE JUMP!", short: "MMJ", badge: "アイドル · 4人" },
+                vbs:       { name: "Vivid BAD SQUAD", short: "VBS", badge: "ストリート音楽 · 4人" },
+                wxs:       { name: "ワンダーランズ×ショウタイム", short: "ワンダショ", badge: "ショー · 4人" },
+                nightcord: { name: "25時、ナイトコードで。", short: "25時", badge: "ネット音楽サークル · 4人" }
+            },
+            en: {
+                leoneed:   { name: "Leo/need", short: "Leo/need", badge: "Band · 4 members" },
+                mmj:       { name: "MORE MORE JUMP!", short: "MMJ", badge: "Idol group · 4 members" },
+                vbs:       { name: "Vivid BAD SQUAD", short: "VBS", badge: "Street music · 4 members" },
+                wxs:       { name: "Wonderlands×Showtime", short: "WxS", badge: "Show troupe · 4 members" },
+                nightcord: { name: "Nightcord at 25:00", short: "25:00", badge: "Online music circle · 4 members" }
+            }
+        };
+
+        /* 担当（按中文原值查表，避免每个角色重复） */
+        const ROLE_I18N = {
+            "主唱 / 吉他":   { ja: "ボーカル／ギター", en: "Vocals / guitar" },
+            "键盘":          { ja: "キーボード", en: "Keyboard" },
+            "鼓手":          { ja: "ドラム", en: "Drums" },
+            "贝斯":          { ja: "ベース", en: "Bass" },
+            "偶像":          { ja: "アイドル", en: "Idol" },
+            "歌手 · Vivids": { ja: "ボーカル · Vivids", en: "Vocals · Vivids" },
+            "歌手 · BAD DOGS": { ja: "ボーカル · BAD DOGS", en: "Vocals · BAD DOGS" },
+            "团长 / 演员":   { ja: "座長／俳優", en: "Leader / performer" },
+            "演员":          { ja: "俳優", en: "Performer" },
+            "演员 / 歌手":   { ja: "俳優／歌手", en: "Performer / singer" },
+            "演出家 / 演员": { ja: "演出家／俳優", en: "Director / performer" },
+            "作曲":          { ja: "作曲", en: "Composer" },
+            "作词":          { ja: "作詞", en: "Lyricist" },
+            "插画":          { ja: "イラスト", en: "Illustrator" },
+            "MV 制作":       { ja: "MV制作", en: "MV creator" }
+        };
+
+        /* 星座 */
+        const ZODIAC_I18N = {
+            "白羊座": { ja: "牡羊座", en: "Aries" },
+            "金牛座": { ja: "牡牛座", en: "Taurus" },
+            "双子座": { ja: "双子座", en: "Gemini" },
+            "巨蟹座": { ja: "蟹座", en: "Cancer" },
+            "狮子座": { ja: "獅子座", en: "Leo" },
+            "处女座": { ja: "乙女座", en: "Virgo" },
+            "天秤座": { ja: "天秤座", en: "Libra" },
+            "天蝎座": { ja: "蠍座", en: "Scorpio" },
+            "射手座": { ja: "射手座", en: "Sagittarius" },
+            "摩羯座": { ja: "山羊座", en: "Capricorn" },
+            "水瓶座": { ja: "水瓶座", en: "Aquarius" },
+            "双鱼座": { ja: "魚座", en: "Pisces" }
+        };
+
+        /* 学校 */
+        const SCHOOL_I18N = {
+            "宫益坂女子学园": { ja: "宮益坂女子学園", en: "Miyamasuzaka Girls Academy" },
+            "神山高校": { ja: "神山高校", en: "Kamiyama High School" },
+            "神山高校（夜间定时制）": { ja: "神山高校（夜間定時制）", en: "Kamiyama High School (evening course)" },
+            "通信制高中": { ja: "通信制高校", en: "Correspondence high school" }
+        };
+
+        /* 界面文案 */
+        const UI = {
+            zh: {
+                htmlLang: "zh-CN",
+                docTitle: "初音未来：缤纷舞台 · 角色与组合图集",
+                appTitle: "初音未来：缤纷舞台",
+                subtitle: "HATSUNE MIKU: COLORFUL STAGE! · 角色与组合图集",
+                originalTitle: "日文原名：プロジェクトセカイ カラフルステージ！ feat. 初音ミク",
+                langLabel: "语言 / Language",
+                searchPlaceholder: "搜索角色名、组合、生日、爱好、食物…",
+                searchAria: "搜索角色",
+                clearSearch: "清空搜索",
+                hintLabel: "快捷体验：",
+                suggestionsIdle: "输入关键词开始搜索",
+                noMatchTitle: "没有找到匹配的角色",
+                noMatchBody: "未能匹配到相关角色。<br>可以试试角色名、组合名（leo / mmj / vbs / wxs / nightcord / 25时）、生日或学校。",
+                matchCount: "{n} 位角色匹配",
+                matchSpread: "（分布在 {m} 个组合）",
+                matchHint: "，点击可直达详情：",
+                lineup: "团员阵容",
+                viewMembers: "查看成员 →",
+                matchFlag: "★ 搜索命中",
+                cardAria: "查看{name}的详细档案",
+                chibiAria: "查看{name}的详细档案",
+                birthdayTag: "生日",
+                schoolTag: "学校",
+                beforeAlt: "{name}的初始立绘",
+                backToUnits: "← 返回组合总览",
+                unitHint: "成员介绍 · 点击成员卡片查看详细档案",
+                backToMembers: "← 返回成员列表",
+                backToMembersAria: "返回{unit}的成员列表",
+                profileOf: "{name} · 详细档案",
+                chibiAlt: "{name}的Q版形象",
+                illustrationAlt: "{name}的特训后立绘",
+                sectionTitle: "角色档案（18 项）",
+                rowName: "本名",
+                rowBirthday: "生日",
+                rowZodiac: "星座",
+                rowHeight: "身高",
+                rowAge: "年龄",
+                rowHair: "发色",
+                rowEyes: "瞳色",
+                rowHobbies: "爱好",
+                rowSpecialty: "擅长的事情",
+                rowWeakness: "不擅长的事情",
+                rowFavFood: "喜欢的食物",
+                rowDislikeFood: "不喜欢的食物",
+                rowSchool: "学校",
+                rowGrade: "学年与班级",
+                rowUnit: "所属团体",
+                rowColor: "代表色",
+                rowRole: "主要担当／定位",
+                rowDesc: "角色简介",
+                detailNote: "※ 身高、学年、年龄采用「升学后（NOW）」数据；角色简介依据官方角色页 NOW 版整理，因此与组队初期的旧版介绍不同。官方未公开的条目（发色、瞳色、喜好食物等）来自游戏内档案，如有出入以游戏内最新资料为准。",
+                cheer: "为角色送应援",
+                listen: "聆听角色自我介绍",
+                cheerAria: "为{name}送应援",
+                listenAria: "在新标签页打开 Bilibili 官方「入住报到」视频：{name}",
+                cheerCount: "已为 {name} 送出 {n} 次应援！",
+                cheerPrompt: "点击上方粉色按钮，为 {name} 送上一份应援吧！",
+                cheerSent: "已送出第 {n} 份应援给 {name}！",
+                footerMain: "非官方粉丝图集 · 20 位角色 × 5 个组合<br>资料整理自官方角色页与游戏内档案 · 角色与立绘版权归 SEGA / Colorful Palette / Crypton Future Media 所有",
+                footerModal: "非官方粉丝图集 · 资料整理自官方角色页与游戏内档案"
+            },
+            ja: {
+                htmlLang: "ja",
+                docTitle: "プロジェクトセカイ カラフルステージ！ feat. 初音ミク · キャラクター＆ユニット図鑑",
+                appTitle: "プロジェクトセカイ カラフルステージ！",
+                subtitle: "feat. 初音ミク · キャラクター＆ユニット図鑑",
+                originalTitle: "",
+                langLabel: "言語 / Language",
+                searchPlaceholder: "キャラ名・ユニット・誕生日・趣味・食べ物で検索…",
+                searchAria: "キャラクターを検索",
+                clearSearch: "検索をクリア",
+                hintLabel: "クイック検索：",
+                suggestionsIdle: "キーワードを入力してください",
+                noMatchTitle: "一致するキャラクターが見つかりません",
+                noMatchBody: "一致するキャラクターがありません。<br>キャラ名・ユニット名（leo / mmj / vbs / wxs / nightcord / 25時）・誕生日・学校などでお試しください。",
+                matchCount: "{n} 人のキャラクターが一致",
+                matchSpread: "（{m} ユニットに分散）",
+                matchHint: "。クリックで詳細へ：",
+                lineup: "メンバー",
+                viewMembers: "メンバーを見る →",
+                matchFlag: "★ 検索ヒット",
+                cardAria: "{name}の詳細プロフィールを見る",
+                chibiAria: "{name}の詳細プロフィールを見る",
+                birthdayTag: "誕生日",
+                schoolTag: "学校",
+                beforeAlt: "{name}の初期イラスト",
+                backToUnits: "← ユニット一覧へ戻る",
+                unitHint: "メンバー紹介 · カードをクリックで詳細プロフィール",
+                backToMembers: "← メンバー一覧へ戻る",
+                backToMembersAria: "{unit}のメンバー一覧へ戻る",
+                profileOf: "{name} · 詳細プロフィール",
+                chibiAlt: "{name}のちびキャラ",
+                illustrationAlt: "{name}の特訓後イラスト",
+                sectionTitle: "キャラクター資料（18項目）",
+                rowName: "氏名",
+                rowBirthday: "誕生日",
+                rowZodiac: "星座",
+                rowHeight: "身長",
+                rowAge: "年齢",
+                rowHair: "髪色",
+                rowEyes: "瞳の色",
+                rowHobbies: "趣味",
+                rowSpecialty: "特技",
+                rowWeakness: "苦手なこと",
+                rowFavFood: "好きな食べ物",
+                rowDislikeFood: "苦手な食べ物",
+                rowSchool: "学校",
+                rowGrade: "学年・クラス",
+                rowUnit: "所属ユニット",
+                rowColor: "イメージカラー",
+                rowRole: "担当・役割",
+                rowDesc: "プロフィール",
+                detailNote: "※ 身長・学年・年齢は「進級後（NOW）」のデータです。プロフィールは公式キャラクターページのNOW版に基づくため、結成当初の紹介文とは異なります。公式に公開されていない項目（髪色・瞳の色・好きな食べ物など）はゲーム内プロフィールによります。",
+                cheer: "応援を送る",
+                listen: "自己紹介を見る",
+                cheerAria: "{name}に応援を送る",
+                listenAria: "Bilibili の公式自己紹介動画を新しいタブで開く：{name}",
+                cheerCount: "{name} に {n} 回の応援を送りました！",
+                cheerPrompt: "上のピンクのボタンから、{name} に応援を送りましょう！",
+                cheerSent: "{name} に {n} 回目の応援を送りました！",
+                footerMain: "非公式ファン図鑑 · 20 キャラクター × 5 ユニット<br>公式キャラクターページとゲーム内プロフィールをもとに作成 · キャラクターとイラストの著作権は SEGA / Colorful Palette / Crypton Future Media に帰属します",
+                footerModal: "非公式ファン図鑑 · 公式キャラクターページとゲーム内プロフィールをもとに作成"
+            },
+            en: {
+                htmlLang: "en",
+                docTitle: "HATSUNE MIKU: COLORFUL STAGE! · Character & Unit Gallery",
+                appTitle: "HATSUNE MIKU: COLORFUL STAGE!",
+                subtitle: "Character & Unit Gallery",
+                originalTitle: "Japanese title: プロジェクトセカイ カラフルステージ！ feat. 初音ミク",
+                langLabel: "Language / 言語",
+                searchPlaceholder: "Search by name, unit, birthday, hobby or food…",
+                searchAria: "Search characters",
+                clearSearch: "Clear search",
+                hintLabel: "Try:",
+                suggestionsIdle: "Type to search",
+                noMatchTitle: "No matching characters",
+                noMatchBody: "Nothing matched.<br>Try a character name, a unit (leo / mmj / vbs / wxs / nightcord / 25:00), a birthday or a school.",
+                matchCount: "{n} character(s) matched",
+                matchSpread: " (across {m} units)",
+                matchHint: ". Click to open the profile:",
+                lineup: "Line-up",
+                viewMembers: "View members →",
+                matchFlag: "★ Match",
+                cardAria: "Open {name}'s profile",
+                chibiAria: "Open {name}'s profile",
+                birthdayTag: "Birthday",
+                schoolTag: "School",
+                beforeAlt: "{name} — initial illustration",
+                backToUnits: "← Back to units",
+                unitHint: "Members · select a card for the full profile",
+                backToMembers: "← Back to members",
+                backToMembersAria: "Back to the {unit} member list",
+                profileOf: "{name} · Profile",
+                chibiAlt: "{name} chibi",
+                illustrationAlt: "{name} — trained illustration",
+                sectionTitle: "Profile (18 items)",
+                rowName: "Full name",
+                rowBirthday: "Birthday",
+                rowZodiac: "Zodiac",
+                rowHeight: "Height",
+                rowAge: "Age",
+                rowHair: "Hair",
+                rowEyes: "Eyes",
+                rowHobbies: "Hobbies",
+                rowSpecialty: "Specialties",
+                rowWeakness: "Weaknesses",
+                rowFavFood: "Favorite food",
+                rowDislikeFood: "Disliked food",
+                rowSchool: "School",
+                rowGrade: "Grade & class",
+                rowUnit: "Unit",
+                rowColor: "Image color",
+                rowRole: "Role",
+                rowDesc: "Profile",
+                detailNote: "※ Height, grade and age are the post-promotion (NOW) values. Profiles follow the NOW version on the official character pages, so they differ from the original launch text. Fields the official site does not publish (hair, eyes, favorite foods, etc.) come from in-game profiles.",
+                cheer: "Send cheers",
+                listen: "Watch self-introduction",
+                cheerAria: "Send cheers to {name}",
+                listenAria: "Open the official Bilibili introduction video in a new tab: {name}",
+                cheerCount: "You have sent {n} cheers to {name}!",
+                cheerPrompt: "Tap the pink button above to send a cheer to {name}!",
+                cheerSent: "Cheer #{n} sent to {name}!",
+                footerMain: "Unofficial fan gallery · 20 characters × 5 units<br>Compiled from the official character pages and in-game profiles · Characters and artwork © SEGA / Colorful Palette / Crypton Future Media",
+                footerModal: "Unofficial fan gallery · Compiled from the official character pages and in-game profiles"
+            }
+        };
+
+        /* 角色字段翻译（只覆盖 ja / en；zh 走 characterDatabase） */
+        const CHAR_I18N = {
+            ja: {
+                "星乃一歌": {
+                    name: "星乃一歌", realName: "星乃 一歌（ほしの いちか）",
+                    hairColor: "黒髪／藍黒のグラデーションロング", eyeColor: "灰青色",
+                    hobbies: "ミクの歌を聴くこと、育てているサボテンを眺めること",
+                    specialty: "りんごの皮むき", weakness: "絶叫アトラクション",
+                    favFood: "焼きそばパン", dislikedFood: "グリーンピース",
+                    colorName: "ミクブルー／スカイブルー",
+                    description: "クールに見えて、本当は友人想いの優しい少女。幼馴染みの咲希、穂波、志歩と共にLeo/needというバンドを結成し、念願のプロ入りを果たした。Leo/needではギターボーカルを担当。オリジナル楽曲の作詞も行いつつ、最近は『初音ミク』を使った作曲にも挑戦している。"
+                },
+                "天马咲希": {
+                    name: "天馬咲希", realName: "天馬 咲希（てんま さき）",
+                    hairColor: "金髪にピンクのグラデーション", eyeColor: "ピンク",
+                    hobbies: "ファッション・メイク動画の視聴、ビーズアクセサリー作り",
+                    specialty: "ヘアアレンジ、お手玉", weakness: "一人ぼっち",
+                    favFood: "お菓子", dislikedFood: "お粥",
+                    colorName: "ひまわりイエロー",
+                    description: "いつも明るく、笑顔を絶やさないムードメーカー。Leo/needのキーボード担当。病気がちで学校に通うこともままならなかった経験から、みんなと一緒にいることや青春を謳歌すること、そして苦しむ人の心に寄り添うことを大切にしており、楽曲制作にもその想いを生かしている。"
+                },
+                "望月穗波": {
+                    name: "望月穂波", realName: "望月 穂波（もちづき ほなみ）",
+                    hairColor: "明るい茶色", eyeColor: "空色",
+                    hobbies: "飼い犬の散歩、家庭菜園",
+                    specialty: "家事全般、水泳", weakness: "絵を描くこと",
+                    favFood: "アップルパイ", dislikedFood: "チーズ",
+                    colorName: "コーラルレッド",
+                    description: "文武両道の優等生で、包み込むような優しさを持つ。Leo/needのドラム担当。人を傷つけたくないという思いから、何かを決断することに悩みがちだったが、バンド活動をとおして少しだけ決断する勇気を抱けるようになる。現在はその精神の強さでLeo/needを支えている。"
+                },
+                "日野森志步": {
+                    name: "日野森志歩", realName: "日野森 志歩（ひのもり しほ）",
+                    hairColor: "淡い灰緑／銀緑のショート", eyeColor: "黄緑",
+                    hobbies: "好きなガールズバンドのライブに行くこと、ベースの練習",
+                    specialty: "書道", weakness: "姉",
+                    favFood: "ラーメン、ハンバーグ", dislikedFood: "豆腐",
+                    colorName: "若草色",
+                    description: "Leo/needのベース担当。音楽に対してストイックで、馴れ合いを嫌う一匹狼のため周りに誤解されることも多かったが、プロになりたいという夢に向かって共に走り、その願いを叶えてくれたLeo/needのみんなのことを、とても大切に思っている。"
+                },
+                "花里实乃理": {
+                    name: "花里みのり", realName: "花里 みのり（はなさと みのり）",
+                    hairColor: "温かみのある茶色", eyeColor: "灰褐色",
+                    hobbies: "振りコピ、日記をつけること、動物の世話",
+                    specialty: "キャッチフレーズを考えること", weakness: "落ち着いた行動",
+                    favFood: "サーモン", dislikedFood: "ブロッコリー",
+                    colorName: "ウォームアプリコット",
+                    description: "純粋な頑張り屋。MORE MORE JUMP！の中で唯一のアイドル未経験者だったが、多くの活動をとおしてファンにも受け入れられ、念願のワンマンライブの開催を果たした。今はドームライブができるような国民的アイドルになることを目標に活動を続けている。"
+                },
+                "桐谷遥": {
+                    name: "桐谷遥", realName: "桐谷 遥（きりたに はるか）",
+                    hairColor: "深い青のショート", eyeColor: "サファイアブルー",
+                    hobbies: "ペンギングッズあつめ",
+                    specialty: "バスケットボール", weakness: "怠けること",
+                    favFood: "甘いもの全般", dislikedFood: "わさび",
+                    colorName: "クリアスカイブルー",
+                    description: "国民的アイドルグループ『ASRUN』に所属していた元トップアイドル。現在はMORE MORE JUMP！のワンマンライブをきっかけに、さらにアイドル活動の意欲に火がつく。そしてみのりと共に単位制へと編入し、もう一度アイドル活動に全力を注ぐことを決める。"
+                },
+                "桃井爱莉": {
+                    name: "桃井愛莉", realName: "桃井 愛莉（ももい あいり）",
+                    hairColor: "桃色のツインテール", eyeColor: "ローズピンク",
+                    hobbies: "アイドル研究、ショッピング",
+                    specialty: "料理、子供の面倒を見ること", weakness: "ネコ（アレルギー）",
+                    favFood: "和菓子", dislikedFood: "レバー",
+                    colorName: "スイートピンク",
+                    description: "アイドルグループ『QT』の元メンバー。アイドルに対しての強い情熱や誇りを武器に、メンバーに活をいれる存在として活躍している。企画力やスケジュール管理能力も高く、事務所を持たないMORE MORE JUMP！に欠かせない業務も積極的にこなしている。"
+                },
+                "日野森雫": {
+                    name: "日野森雫", realName: "日野森 雫（ひのもり しずく）",
+                    hairColor: "淡い空色のロング", eyeColor: "透きとおる水色",
+                    hobbies: "読書、散歩",
+                    specialty: "弓道、刺繍", weakness: "地図を読むこと、機械の操作",
+                    favFood: "うどん、きつね", dislikedFood: "辛いもの全般",
+                    colorName: "ミントシアー",
+                    description: "今でも人気を博しているアイドルグループ『Cheerful＊Days』の元センター。かつてのメンバー達とうまくいかず脱退してしまったことにわだかまりを持っていたが、MORE MORE JUMP！初のテレビ出演での共演をきっかけに少しだけ和解し、前向きに進んでいる。"
+                },
+                "小豆泽心羽": {
+                    name: "小豆沢こはね", realName: "小豆沢 こはね（あずさわ こはね）",
+                    hairColor: "明るい杏色／明るい亜麻色のツインテール", eyeColor: "薄い茶色／琥珀色",
+                    hobbies: "父親が飼っているヘビのお世話",
+                    specialty: "写真", weakness: "人前に立つこと",
+                    favFood: "桃まん、ごま団子", dislikedFood: "酢の物",
+                    colorName: "マシュマロピンク",
+                    description: "内気な性格だったが、仲間との切磋琢磨と、伝説のイベントを行ったメンバーのひとり・大河の修行により、自分の歌に自信を持てるようになった。一度師匠の大河に打ち負かされ悔しい思いをするものの、その気持ちを胸に立ち上がり、改めて『RAD WEEKEND』を超えることを宣言する。"
+                },
+                "白石杏": {
+                    name: "白石杏", realName: "白石 杏（しらいし あん）",
+                    hairColor: "黒からサファイアブルーへのグラデーション", eyeColor: "金色",
+                    hobbies: "ミント栽培",
+                    specialty: "コーヒーや紅茶を淹れること", weakness: "幽霊、怪談話",
+                    favFood: "ラムレーズンアイス", dislikedFood: "トマト",
+                    colorName: "スカイブルー",
+                    description: "明るく裏表のない、WEEKEND GARAGEの看板娘。父達がおこなった伝説のイベント『RAD WEEKEND』を超えるイベントをつくるため活動している中、憧れの人物・凪の秘密を知り衝撃を受ける。しかし父から凪の想いを聞いて再起し、改めて伝説を超えることを誓う。"
+                },
+                "东云彰人": {
+                    name: "東雲彰人", realName: "東雲 彰人（しののめ あきと）",
+                    hairColor: "明るいオレンジ（黄色のメッシュ入り）", eyeColor: "青朽葉色",
+                    hobbies: "ファッションコーディネート",
+                    specialty: "ヒューマンビートボックス", weakness: "犬",
+                    favFood: "ホットケーキ、チーズケーキ", dislikedFood: "にんじん",
+                    colorName: "ブレイズオレンジ",
+                    description: "伝説のイベント『RAD WEEKEND』を超えることを夢見て、血の滲むような練習を重ねる努力家。『RAD WEEKEND』の裏にあった秘密の重さに一度は立ち止まりそうになるものの、夢にかける強い想いで奮起し、挑み続けることを決める。"
+                },
+                "青柳冬弥": {
+                    name: "青柳冬弥", realName: "青柳 冬弥（あおやぎ とうや）",
+                    hairColor: "ツートン（濃い青／淡いアイスブルー）", eyeColor: "冷たい灰青",
+                    hobbies: "読書",
+                    specialty: "ピアノ、バイオリン", weakness: "高い所",
+                    favFood: "コーヒー、クッキー", dislikedFood: "イカ",
+                    colorName: "ディープウルトラマリン",
+                    description: "クラシックの名家に生まれた秀才。伝説のイベント『RAD WEEKEND』超えを目指し、作曲にも挑戦している。伝説の真のレベルの高さを知り圧倒されるものの、これまでの経験を胸に、仲間とともに壁を越え、その先の景色を見ることを望むようになる。"
+                },
+                "天马司": {
+                    name: "天馬司", realName: "天馬 司（てんま つかさ）",
+                    hairColor: "明るい黄から桃橙へのグラデーション", eyeColor: "金橘",
+                    hobbies: "ミュージカル観劇、衣装づくり",
+                    specialty: "どんな時も即カッコいいポーズができる、ピアノ", weakness: "虫（特に多足）",
+                    favFood: "アクアパッツァ、生姜焼き", dislikedFood: "ピーマン",
+                    colorName: "スターイエロー",
+                    description: "世界一のスターを目指す、ワンダーランズ×ショウタイムの座長。キャストとして様々な経験を積むなか、広い世界を見て学びを深めたいという想いを強く抱き、ついに仲間達と共にワンダーステージを飛び出し、次のステップへ踏み出すことを決める。"
+                },
+                "凤笑梦": {
+                    name: "鳳えむ", realName: "鳳 えむ（おおとり えむ）",
+                    hairColor: "明るいピンクのショート", eyeColor: "キャンディピンク",
+                    hobbies: "ご近所探検",
+                    specialty: "アクロバット、なんでも美味しく食べられる", weakness: "夕暮れ",
+                    favFood: "たい焼き", dislikedFood: "なし（好き嫌いなし）",
+                    colorName: "ワンダーピンク",
+                    description: "底抜けに明るい、天真爛漫な性格。祖父の遺したフェニックスワンダーランドを守ることが夢で、夢を追いかけるワンダーランズ×ショウタイムのみんなとはいずれ別れが来ることを覚悟していた。だが、兄達や仲間達に背中を押され、修業のため外へ足を踏み出すことを決める。"
+                },
+                "草薙宁宁": {
+                    name: "草薙寧々", realName: "草薙 寧々（くさなぎ ねね）",
+                    hairColor: "ミントグレーのロング", eyeColor: "淡い紫灰",
+                    hobbies: "対戦ゲーム、ミュージカル・映画鑑賞",
+                    specialty: "歌、機械の操作全般", weakness: "人通りの多い場所",
+                    favFood: "グレープフルーツ", dislikedFood: "ミント味",
+                    colorName: "ミントグリーン",
+                    description: "世界で活躍するミュージカル俳優を目指す少女。ある公演の練習では歌への自信が折られてしまうが、それをきっかけに、歌にかける強い想いを再確認することができた。今後は仲間達と共に広い世界で、多くのことを吸収しようと意気込んでいる。"
+                },
+                "神代类": {
+                    name: "神代類", realName: "神代 類（かみしろ るい）",
+                    hairColor: "青紫のツートン（紫に青のメッシュ）", eyeColor: "金琥珀",
+                    hobbies: "ショーの演出を考えること、バルーンアート",
+                    specialty: "発明", weakness: "掃除、単純作業",
+                    favFood: "ラムネ", dislikedFood: "野菜全般",
+                    colorName: "ラベンダーパープル",
+                    description: "マイペースな天才演出家。かつてはひとりでショーを行っていたが、自身の演出を受け入れてくれるワンダーランズ×ショウタイムに居場所を見出し、夢のために離れ離れにならずにすむ道を模索。結果、全員でショーを続けながら夢を追い続けるという最高のフィナーレへ導いた。"
+                },
+                "宵崎奏": {
+                    name: "宵崎奏", realName: "宵崎 奏（よいさき かなで）",
+                    hairColor: "銀白のロング", eyeColor: "アイスブルー",
+                    hobbies: "音楽を探して聴くこと、映画・漫画・アニメ・美術作品などを見ること",
+                    specialty: "感覚で時間を計れる", weakness: "直射日光、家事全般",
+                    favFood: "カップ麺、缶詰", dislikedFood: "パクチー、納豆など匂いの強いもの",
+                    colorName: "スモーキーローズ",
+                    description: "自分の作った曲にまふゆが反応することが増え嬉しく思っていたが、ある時、まふゆの母親から「まふゆから離れてほしい」と要求されてしまう。しかしその言動や振る舞いに違和感を覚え、要求を跳ねのけ、まふゆと一緒にいることを選ぶ。"
+                },
+                "朝比奈真冬": {
+                    name: "朝比奈まふゆ", realName: "朝比奈 まふゆ（あさひな まふゆ）",
+                    hairColor: "濃い紫のポニーテール", eyeColor: "紫から青へのグラデーション",
+                    hobbies: "アクアリウム鑑賞",
+                    specialty: "英会話", weakness: "わからない",
+                    favFood: "母親の手料理（味は感じにくい）", dislikedFood: "わからない",
+                    colorName: "ナイトパープル",
+                    description: "『25時、ナイトコードで。』の作詞担当。母親に『いい子』であることを求められ続け自分を見失っていたが、音楽活動をとおしてサークルを居場所だと認識するようになる。しかしその居場所さえ奪われそうになり、ついに限界を感じ家を飛び出して奏に助けを求めた。"
+                },
+                "东云绘名": {
+                    name: "東雲絵名", realName: "東雲 絵名（しののめ えな）",
+                    hairColor: "温かみのある栗色", eyeColor: "明るい琥珀色",
+                    hobbies: "絵を描くこと、自撮り＆SNSにアップ、エゴサーチ",
+                    specialty: "ファッション小物のリサーチ、料理の食材当て", weakness: "朝起きること",
+                    favFood: "チーズケーキ、ホットケーキ", dislikedFood: "にんじん",
+                    colorName: "ミルクティーブラウン",
+                    description: "『25時、ナイトコードで。』のイラスト担当。絵の才能のなさに苦しみながらも努力し、酷評されても描き続ける心の強さを持つ。はっきりとした性格で、母親に意思を伝えないまふゆにイラついていたものの、出会った時からの変化は感じており、仲間として大切に見守っている。"
+                },
+                "晓山瑞希": {
+                    name: "暁山瑞希", realName: "暁山 瑞希（あきやま みずき）",
+                    hairColor: "桜ピンク（高めのサイドポニー）", eyeColor: "クリアピンク",
+                    hobbies: "動画素材集め、コラージュ",
+                    specialty: "洋服のアレンジ", weakness: "熱い食べ物（猫舌）",
+                    favFood: "カレーライス、フライドポテト", dislikedFood: "きのこ類",
+                    colorName: "ドリーミーピンク",
+                    description: "『25時、ナイトコードで。』の動画担当。母親と関係が悪化していくまふゆのことを心配していたが、瑞希自身、自分の秘密と向き合えずにいる現状から無力感を覚えていた。だが、その経験から逃げることで得られるものがあることにも気づき、まふゆに「逃げていい」と助言する。"
+                }
+            },
+            en: {
+                "星乃一歌": {
+                    name: "Ichika Hoshino", realName: "Ichika Hoshino",
+                    hairColor: "Black with a blue-black gradient, long", eyeColor: "Gray-blue",
+                    hobbies: "Listening to Miku's songs; watching the cactus she grows",
+                    specialty: "Peeling apples in one long strip", weakness: "Thrill rides",
+                    favFood: "Yakisoba bread", dislikedFood: "Green peas",
+                    colorName: "Miku blue / sky blue",
+                    description: "Cool on the surface, but a kind girl who truly cares about her friends. Together with her childhood friends Saki, Honami and Shiho she formed the band Leo/need and achieved their dream of going pro. She sings lead and plays guitar, writes lyrics for their original songs, and has recently started composing with Hatsune Miku."
+                },
+                "天马咲希": {
+                    name: "Saki Tenma", realName: "Saki Tenma",
+                    hairColor: "Blonde with pink tips", eyeColor: "Pink",
+                    hobbies: "Watching fashion and make-up videos; making beaded accessories",
+                    specialty: "Hair arranging; otedama juggling", weakness: "Being alone",
+                    favFood: "Sweets and snacks", dislikedFood: "Rice porridge",
+                    colorName: "Sunflower yellow",
+                    description: "A mood maker who is always cheerful and never stops smiling, and Leo/need's keyboardist. Having been too ill to attend school, she treasures being with everyone, enjoying her youth, and staying close to people who suffer — feelings she pours into their songwriting."
+                },
+                "望月穗波": {
+                    name: "Honami Mochizuki", realName: "Honami Mochizuki",
+                    hairColor: "Light brown", eyeColor: "Sky blue",
+                    hobbies: "Walking her dog; tending the family vegetable garden",
+                    specialty: "All kinds of housework; swimming", weakness: "Drawing",
+                    favFood: "Apple pie", dislikedFood: "Cheese",
+                    colorName: "Coral red",
+                    description: "An honors student who excels in both academics and sports, with an enveloping kindness, and Leo/need's drummer. Because she never wanted to hurt anyone she struggled to make decisions; through the band she gained a little courage to decide, and now supports Leo/need with that strength of spirit."
+                },
+                "日野森志步": {
+                    name: "Shiho Hinomori", realName: "Shiho Hinomori",
+                    hairColor: "Pale gray-green, short", eyeColor: "Yellow-green",
+                    hobbies: "Going to girl-band lives; practicing bass",
+                    specialty: "Calligraphy", weakness: "Her overly clingy older sister",
+                    favFood: "Ramen; hamburger steak", dislikedFood: "Tofu",
+                    colorName: "Fresh green",
+                    description: "Leo/need's bassist. Strict with herself about music and a lone wolf who dislikes empty friendliness, she is often misunderstood — but she treasures the Leo/need members who ran with her toward the dream of going pro and made that wish come true."
+                },
+                "花里实乃理": {
+                    name: "Minori Hanasato", realName: "Minori Hanasato",
+                    hairColor: "Warm brown", eyeColor: "Grayish brown",
+                    hobbies: "Copying idol choreography; keeping a diary; caring for animals",
+                    specialty: "Coming up with catchphrases", weakness: "Acting calmly",
+                    favFood: "Salmon", dislikedFood: "Broccoli",
+                    colorName: "Warm apricot",
+                    description: "A pure-hearted trier. She was the only member of MORE MORE JUMP! with no idol experience, but through many activities she was accepted by fans and achieved her dream of a solo live. Now she keeps working toward becoming a national idol who can fill a dome."
+                },
+                "桐谷遥": {
+                    name: "Haruka Kiritani", realName: "Haruka Kiritani",
+                    hairColor: "Deep blue, short", eyeColor: "Sapphire blue",
+                    hobbies: "Collecting penguin goods",
+                    specialty: "Basketball", weakness: "Slacking off",
+                    favFood: "Anything sweet", dislikedFood: "Wasabi",
+                    colorName: "Clear sky blue",
+                    description: "A former top idol of the national idol group ASRUN. MORE MORE JUMP!'s solo live rekindled her drive for idol work, and she transferred to a credit-based school together with Minori, determined to give idol activities her all once more."
+                },
+                "桃井爱莉": {
+                    name: "Airi Momoi", realName: "Airi Momoi",
+                    hairColor: "Peach-pink twintails", eyeColor: "Rose pink",
+                    hobbies: "Studying idols; shopping",
+                    specialty: "Cooking; looking after children", weakness: "Cats (allergic)",
+                    favFood: "Japanese sweets", dislikedFood: "Liver",
+                    colorName: "Sweet pink",
+                    description: "A former member of the idol group QT. Armed with fierce passion and pride for idol work, she is the one who fires up the team. She is also strong at planning and scheduling, and eagerly handles the essential work of an agency-less MORE MORE JUMP!"
+                },
+                "日野森雫": {
+                    name: "Shizuku Hinomori", realName: "Shizuku Hinomori",
+                    hairColor: "Pale sky-blue, long", eyeColor: "Crystal aqua",
+                    hobbies: "Reading; taking walks",
+                    specialty: "Kyudo; embroidery", weakness: "Reading maps; operating machines",
+                    favFood: "Udon; kitsune udon", dislikedFood: "Anything spicy",
+                    colorName: "Mint sheer",
+                    description: "Former center of the still-popular idol group Cheerful＊Days. She carried lingering regret over leaving after falling out with her old teammates, but a joint appearance on MORE MORE JUMP!'s first TV show helped them reconcile a little, and she is moving forward."
+                },
+                "小豆泽心羽": {
+                    name: "Kohane Azusawa", realName: "Kohane Azusawa",
+                    hairColor: "Light apricot / light flaxen twintails", eyeColor: "Light brown / amber",
+                    hobbies: "Caring for her father's pet snake",
+                    specialty: "Photography", weakness: "Standing in front of a crowd",
+                    favFood: "Peach buns; sesame balls", dislikedFood: "Vinegared dishes",
+                    colorName: "Marshmallow pink",
+                    description: "Once painfully shy, she grew confident in her singing through friendly rivalry with her teammates and training under Taiga, one of the members who held the legendary event. Though her mentor Taiga once defeated her and left her frustrated, she rises with that feeling and declares once more that she will surpass RAD WEEKEND."
+                },
+                "白石杏": {
+                    name: "An Shiraishi", realName: "An Shiraishi",
+                    hairColor: "Gradient from black to sapphire blue", eyeColor: "Gold",
+                    hobbies: "Growing mint",
+                    specialty: "Brewing coffee and tea", weakness: "Ghosts; horror stories",
+                    favFood: "Rum raisin ice cream", dislikedFood: "Tomatoes",
+                    colorName: "Sky blue",
+                    description: "Bright and guileless, the face of WEEKEND GARAGE. While working to create an event that surpasses her father's legendary RAD WEEKEND, she learns the secret of the person she admires, Nagi, and is shaken. But hearing from her father about Nagi's feelings, she gets back up and vows once more to surpass the legend."
+                },
+                "东云彰人": {
+                    name: "Akito Shinonome", realName: "Akito Shinonome",
+                    hairColor: "Bright orange with yellow highlights", eyeColor: "Olive green",
+                    hobbies: "Coordinating outfits",
+                    specialty: "Human beatbox", weakness: "Dogs",
+                    favFood: "Pancakes; cheesecake", dislikedFood: "Carrots",
+                    colorName: "Blaze orange",
+                    description: "A hard worker who trains until he bleeds, dreaming of surpassing RAD WEEKEND. The weight of the secret behind RAD WEEKEND nearly makes him stop, but his fierce devotion to the dream drives him to rise and keep taking on the challenge."
+                },
+                "青柳冬弥": {
+                    name: "Toya Aoyagi", realName: "Toya Aoyagi",
+                    hairColor: "Two-tone (deep blue / pale ice blue)", eyeColor: "Cool gray-blue",
+                    hobbies: "Reading",
+                    specialty: "Piano; violin", weakness: "High places",
+                    favFood: "Coffee; cookies", dislikedFood: "Squid",
+                    colorName: "Deep ultramarine",
+                    description: "A brilliant young man born into a distinguished classical-music family. Aiming to surpass RAD WEEKEND, he has also begun composing. Though the true level of that legend overwhelms him, he carries his experience with him and now wants to cross the wall with his friends and see what lies beyond."
+                },
+                "天马司": {
+                    name: "Tsukasa Tenma", realName: "Tsukasa Tenma",
+                    hairColor: "Gradient from bright yellow to peach-orange", eyeColor: "Golden orange",
+                    hobbies: "Watching musicals; making costumes",
+                    specialty: "Striking a cool pose instantly; piano", weakness: "Bugs (especially many-legged ones)",
+                    favFood: "Acqua pazza; ginger pork", dislikedFood: "Green peppers",
+                    colorName: "Star yellow",
+                    description: "The leader of Wonderlands×Showtime, aiming to become the world's greatest star. As he gains experience as a performer, his wish to see the wider world and learn more grows stronger, and at last he decides to step out of the Wonder Stage with his friends and take the next step."
+                },
+                "凤笑梦": {
+                    name: "Emu Otori", realName: "Emu Otori",
+                    hairColor: "Bright pink, short", eyeColor: "Candy pink",
+                    hobbies: "Exploring the neighborhood",
+                    specialty: "Acrobatics; enjoying any food", weakness: "Dusk",
+                    favFood: "Taiyaki", dislikedFood: "None (not a picky eater)",
+                    colorName: "Wonder pink",
+                    description: "Endlessly cheerful and innocent. Her dream is to protect Phoenix Wonderland, which her grandfather left behind, and she had braced herself for the day she would part ways with her dream-chasing Wonderlands×Showtime friends. But her brothers and teammates push her forward, and she decides to set out to train."
+                },
+                "草薙宁宁": {
+                    name: "Nene Kusanagi", realName: "Nene Kusanagi",
+                    hairColor: "Mint gray, long", eyeColor: "Pale violet-gray",
+                    hobbies: "Competitive games; musicals and films",
+                    specialty: "Singing; operating machinery", weakness: "Crowded places",
+                    favFood: "Grapefruit", dislikedFood: "Mint-flavoured things",
+                    colorName: "Mint green",
+                    description: "A girl aiming to become a musical actress who performs around the world. During rehearsals for a certain production her confidence in her singing was broken — but that became the chance to reaffirm how strongly she feels about singing. Now she is determined to absorb as much as she can with her friends in the wider world."
+                },
+                "神代类": {
+                    name: "Rui Kamishiro", realName: "Rui Kamishiro",
+                    hairColor: "Blue-violet two-tone (purple with blue highlights)", eyeColor: "Golden amber",
+                    hobbies: "Planning show direction; balloon art",
+                    specialty: "Inventing", weakness: "Cleaning; repetitive tasks",
+                    favFood: "Ramune candy", dislikedFood: "Vegetables in general",
+                    colorName: "Lavender purple",
+                    description: "An easygoing genius director. He once put on shows alone, but found a place in Wonderlands×Showtime, which accepts his direction, and searched for a way to pursue his dream without the group splitting up. In the end he led them to the finest finale: everyone keeps doing shows while chasing their dreams."
+                },
+                "宵崎奏": {
+                    name: "Kanade Yoisaki", realName: "Kanade Yoisaki",
+                    hairColor: "Silver-white, long", eyeColor: "Ice blue",
+                    hobbies: "Seeking out and listening to music; films, manga, anime and art",
+                    specialty: "Telling time by feel", weakness: "Direct sunlight; housework",
+                    favFood: "Cup noodles; canned food", dislikedFood: "Cilantro, natto and other strongly scented foods",
+                    colorName: "Smoky rose",
+                    description: "She was glad that Mafuyu was responding more and more to the songs she wrote, but one day Mafuyu's mother demanded that she stay away from Mafuyu. Something about the woman's words and manner felt wrong, so she refused and chose to stay by Mafuyu's side."
+                },
+                "朝比奈真冬": {
+                    name: "Mafuyu Asahina", realName: "Mafuyu Asahina",
+                    hairColor: "Deep purple, ponytail", eyeColor: "Gradient from purple to blue",
+                    hobbies: "Watching aquariums",
+                    specialty: "English conversation", weakness: "She doesn't know",
+                    favFood: "Her mother's home cooking (though she can barely taste it)", dislikedFood: "She doesn't know",
+                    colorName: "Night purple",
+                    description: "The lyricist of Nightcord at 25:00. Constantly pressed by her mother to be a “good girl”, she lost sight of herself — until, through the music circle, she came to see it as her place. When even that place was about to be taken away, she finally reached her limit, ran away from home, and asked Kanade for help."
+                },
+                "东云绘名": {
+                    name: "Ena Shinonome", realName: "Ena Shinonome",
+                    hairColor: "Warm chestnut brown", eyeColor: "Bright amber brown",
+                    hobbies: "Drawing; selfies and posting on social media; ego-searching",
+                    specialty: "Researching fashion accessories; guessing ingredients", weakness: "Getting up in the morning",
+                    favFood: "Cheesecake; pancakes", dislikedFood: "Carrots",
+                    colorName: "Milk-tea brown",
+                    description: "The illustrator of Nightcord at 25:00. She suffers over her lack of artistic talent yet keeps working, with the strength to keep drawing even when harshly criticized. Blunt by nature, she was irritated that Mafuyu never speaks up to her mother, but she notices how Mafuyu has changed since they met and watches over her as a dear friend."
+                },
+                "晓山瑞希": {
+                    name: "Mizuki Akiyama", realName: "Mizuki Akiyama",
+                    hairColor: "Sakura pink (high side ponytail)", eyeColor: "Clear pink",
+                    hobbies: "Collecting footage for MVs; making collages",
+                    specialty: "Reworking and designing clothes", weakness: "Hot food (cat's tongue)",
+                    favFood: "Curry rice; french fries", dislikedFood: "Mushrooms",
+                    colorName: "Dreamy pink",
+                    description: "The video creator of Nightcord at 25:00. Worried about Mafuyu's worsening relationship with her mother, Mizuki felt powerless because they could not face their own secret. But that experience taught them that running away can also bring something, and they tell Mafuyu, “It's okay to run.”"
                 }
             }
-            
-            if (matchedUnits.size > 0) {
-                matchedUnits.forEach(unitId => {
-                    const card = document.querySelector(`.unit-card[data-unit="${unitId}"]`);
-                    if (card) card.classList.add('highlighted');
-                });
+        };
 
-                // 显示直接匹配到的角色快捷入口
-                suggestionsPanel.style.display = 'block';
-                matchedCharacters.forEach(char => {
-                    const chip = document.createElement('div');
-                    chip.className = 'search-chip';
-                    chip.innerHTML = `
-                        <img src="${char.chibiImg}" alt="${char.name}">
-                        <span>${char.name}</span>
-                        <span style="font-size: 11px; opacity: 0.7;">(${char.unit})</span>
-                    `;
-                    chip.addEventListener('click', () => {
-                        showCharacterDetail(char.unitId, char.name);
-                    });
-                    searchChipsContainer.appendChild(chip);
+        /* ============================================================
+           取词工具
+           ============================================================ */
+        function t(key, vars) {
+            const dict = UI[currentLang] || UI.zh;
+            let text = dict[key];
+            if (text == null) text = UI.zh[key];
+            if (text == null) return key;
+            if (vars) {
+                Object.keys(vars).forEach(function (name) {
+                    text = text.split('{' + name + '}').join(String(vars[name]));
                 });
-            } else {
-                searchResults.innerHTML = '<div class="no-results">未能匹配到相关角色或组合，请尝试输入角色名、爱好或学校！</div>';
+            }
+            return text;
+        }
+
+        function unitName(unitId) {
+            const entry = UNIT_I18N[currentLang] && UNIT_I18N[currentLang][unitId];
+            if (entry) return entry.name;
+            return unitMeta[unitId] ? unitMeta[unitId].name : unitId;
+        }
+
+        function unitShort(unitId) {
+            const entry = UNIT_I18N[currentLang] && UNIT_I18N[currentLang][unitId];
+            if (entry) return entry.short;
+            return unitMeta[unitId] ? unitMeta[unitId].short : unitId;
+        }
+
+        function unitBadge(unitId) {
+            const entry = UNIT_I18N[currentLang] && UNIT_I18N[currentLang][unitId];
+            return entry ? entry.badge : '';
+        }
+
+        function charText(key, field) {
+            const translated = CHAR_I18N[currentLang] && CHAR_I18N[currentLang][key];
+            if (translated && translated[field] != null) return translated[field];
+            const base = characterDatabase[key];
+            return base && base[field] != null ? base[field] : '';
+        }
+
+        function charShort(key) {
+            const table = SHORT_NAMES[currentLang];
+            if (table && table[key]) return table[key];
+            return charText(key, 'name');
+        }
+
+        function locRole(zhRole) {
+            const entry = ROLE_I18N[zhRole];
+            return entry && entry[currentLang] ? entry[currentLang] : zhRole;
+        }
+
+        function locZodiac(zhZodiac) {
+            const entry = ZODIAC_I18N[zhZodiac];
+            return entry && entry[currentLang] ? entry[currentLang] : zhZodiac;
+        }
+
+        function locSchool(zhSchool) {
+            const entry = SCHOOL_I18N[zhSchool];
+            return entry && entry[currentLang] ? entry[currentLang] : zhSchool;
+        }
+
+        function locGrade(zhGrade) {
+            if (currentLang === 'zh') return zhGrade;
+            const classes = String(zhGrade).match(/^(\d)年([A-Z])班 → (\d)年([A-Z])班$/);
+            if (classes) {
+                return currentLang === 'ja'
+                    ? classes[1] + '年' + classes[2] + '組 → ' + classes[3] + '年' + classes[4] + '組'
+                    : 'Class ' + classes[1] + '-' + classes[2] + ' → ' + classes[3] + '-' + classes[4];
+            }
+            const years = String(zhGrade).match(/^高中(\d)年级 → 高中(\d)年级$/);
+            if (years) {
+                return currentLang === 'ja'
+                    ? '高校' + years[1] + '年 → 高校' + years[2] + '年'
+                    : 'Year ' + years[1] + ' → Year ' + years[2];
+            }
+            return zhGrade;
+        }
+
+        function locAge(zhAge) {
+            const ages = String(zhAge).match(/^(\d+)岁（升学后(\d+)岁）$/);
+            if (!ages) return zhAge;
+            if (currentLang === 'ja') return ages[1] + '歳（進級後' + ages[2] + '歳）';
+            if (currentLang === 'en') return ages[1] + ' (' + ages[2] + ' after promotion)';
+            return zhAge;
+        }
+
+        function locBirthday(zhBirthday) {
+            if (currentLang !== 'en') return zhBirthday;
+            const date = String(zhBirthday).match(/^(\d+)月(\d+)日$/);
+            if (!date) return zhBirthday;
+            return MONTHS_EN[Number(date[1]) - 1] + ' ' + date[2];
+        }
+
+        /* ============================================================
+           基础工具
+           ============================================================ */
+        function el(id) {
+            return document.getElementById(id);
+        }
+
+        /* 搜索归一化：忽略大小写、空白、全角空格与常见标点 */
+        function normalize(value) {
+            return String(value == null ? '' : value)
+                .toLowerCase()
+                .replace(/[\s\u3000]+/g, '')
+                .replace(/[×✕·・、，。！!\/\\\-—_:：'"“”‘’（）()\[\]【】]/g, '');
+        }
+
+        /* ============================================================
+           搜索索引：把三种语言的姓名/字段/组合名一起建索引，
+           因此切换语言后仍可用任意语言的写法搜索
+           ============================================================ */
+        const searchIndex = Object.keys(characterDatabase).map(function (key) {
+            const char = characterDatabase[key];
+            const meta = unitMeta[char.unitId];
+            const parts = [
+                char.name, char.realName, char.unit,
+                meta ? meta.name : '', meta ? meta.jp : '', meta ? meta.short : '',
+                meta ? meta.aliases.join(' ') : '',
+                char.birthday, char.zodiac, char.height, char.age,
+                char.hairColor, char.eyeColor, char.hobbies, char.specialty,
+                char.weakness, char.favFood, char.dislikedFood, char.school,
+                char.gradeClass, char.color, char.colorName, char.role,
+                char.description
+            ];
+
+            SUPPORTED_LANGS.forEach(function (lang) {
+                const unit = UNIT_I18N[lang] && UNIT_I18N[lang][char.unitId];
+                if (unit) parts.push(unit.name, unit.short, unit.badge);
+                const dict = CHAR_I18N[lang];
+                const translated = dict && dict[key];
+                if (translated) {
+                    Object.keys(translated).forEach(function (field) {
+                        parts.push(translated[field]);
+                    });
+                }
+            });
+
+            const zodiac = ZODIAC_I18N[char.zodiac];
+            if (zodiac) parts.push(zodiac.ja, zodiac.en);
+            const school = SCHOOL_I18N[char.school];
+            if (school) parts.push(school.ja, school.en);
+            const role = ROLE_I18N[char.role];
+            if (role) parts.push(role.ja, role.en);
+
+            /* 英文月份日期 / 英文班级写法 */
+            const date = String(char.birthday).match(/^(\d+)月(\d+)日$/);
+            if (date) parts.push(MONTHS_EN[Number(date[1]) - 1] + ' ' + date[2]);
+            const classes = String(char.gradeClass).match(/^(\d)年([A-Z])班 → (\d)年([A-Z])班$/);
+            if (classes) parts.push(classes[1] + '-' + classes[2], classes[3] + '-' + classes[4]);
+
+            return { key: key, char: char, text: normalize(parts.join(' ')) };
+        });
+
+        /* ============================================================
+           视图栈：units（总览）→ unit（成员）→ detail（详情）
+           返回时按栈回退，因此从搜索结果直达详情会回到搜索结果
+           ============================================================ */
+        const viewStack = [{ type: 'units', scrollTop: 0 }];
+        let currentView = viewStack[0];
+        let currentCharacterName = null;
+
+        function scrollerOf(type) {
+            if (type === 'unit') return el('characterModal');
+            if (type === 'detail') return el('detailModal');
+            return el('unitsModal');
+        }
+
+        function rememberScroll() {
+            if (!currentView) return;
+            const scroller = scrollerOf(currentView.type);
+            if (scroller) currentView.scrollTop = scroller.scrollTop;
+        }
+
+        function setViewVisibility(type) {
+            el('unitsModal').style.display = type === 'units' ? 'block' : 'none';
+            el('characterModal').style.display = type === 'unit' ? 'block' : 'none';
+            el('detailModal').style.display = type === 'detail' ? 'block' : 'none';
+        }
+
+        function renderView(view) {
+            setViewVisibility(view.type);
+
+            if (view.type === 'unit') {
+                renderCharacterList(view.unitId);
+            } else if (view.type === 'detail') {
+                renderDetail(view.unitId, view.charName);
+            }
+
+            const scroller = scrollerOf(view.type);
+            if (scroller) scroller.scrollTop = view.scrollTop || 0;
+
+            el('globalCloseBtn').classList.toggle('is-visible', view.type !== 'units');
+
+            currentView = view;
+
+            if (view.type === 'unit') {
+                el('characterUnitTitle').focus({ preventScroll: true });
+            } else if (view.type === 'detail') {
+                el('detailCharacterName').focus({ preventScroll: true });
+            } else if (view.returnFocus && document.contains(view.returnFocus)) {
+                view.returnFocus.focus({ preventScroll: true });
             }
         }
 
-        // 渲染指定组合的成员卡片内容（确保视图与当前选定组合100%同步）
-        function renderCharacterModal(unitId) {
-            const characterContainer = document.getElementById('characterContainer');
-            const unitTitle = document.getElementById('characterUnitTitle');
-            const unitHeaderLogo = document.getElementById('unitHeaderLogo');
-            currentUnitId = unitId;
+        function navigate(view) {
+            rememberScroll();
+            if (currentView) currentView.returnFocus = document.activeElement;
+            viewStack.push(view);
+            renderView(view);
+        }
 
+        function goBack() {
+            if (viewStack.length <= 1) return false;
+            rememberScroll();
+            viewStack.pop();
+            renderView(viewStack[viewStack.length - 1]);
+            return true;
+        }
+
+        function openUnit(unitId) {
+            if (!unitMeta[unitId]) return;
+            navigate({ type: 'unit', unitId: unitId, scrollTop: 0 });
+        }
+
+        function openDetail(unitId, charName) {
+            if (!characterDatabase[charName]) return;
+            navigate({ type: 'detail', unitId: unitId, charName: charName, scrollTop: 0 });
+        }
+
+        /* ============================================================
+           组合成员列表
+           ============================================================ */
+        function renderCharacterList(unitId) {
             const meta = unitMeta[unitId];
-            unitTitle.textContent = meta.name + " 成员介绍";
-            unitHeaderLogo.src = meta.logo;
-            unitHeaderLogo.alt = meta.name;
-            characterContainer.innerHTML = "";
-            
-            unitToCharacters[unitId].forEach(charName => {
-                const char = characterDatabase[charName];
+            if (!meta) return;
+
+            el('characterUnitName').textContent = unitName(unitId);
+
+            const logo = el('unitHeaderLogo');
+            logo.src = meta.logo;
+            logo.alt = '';
+
+            const container = el('characterContainer');
+            container.innerHTML = '';
+
+            unitToCharacters[unitId].forEach(function (key) {
+                const char = characterDatabase[key];
+                const displayName = charText(key, 'name');
+
                 const card = document.createElement('article');
                 card.className = 'character-card';
-                card.setAttribute('tabindex', '0');
+                card.tabIndex = 0;
                 card.setAttribute('role', 'button');
-                card.setAttribute('aria-label', '查看 ' + char.name + ' 的详细档案');
-                
-                card.innerHTML = `
-                    <div class="character-card-header">
-                        <div class="character-name-group">
-                            <img class="character-chibi-badge" src="${char.chibiImg}" alt="${char.name} Q版">
-                            <div class="character-card-name">${char.name}</div>
-                        </div>
-                        <div class="character-card-role">${char.role}</div>
-                    </div>
-                    <div class="character-img-wrap">
-                        <img class="character-image" src="${char.beforeImg}" alt="${char.name} 初始立绘">
-                    </div>
-                    <div class="character-card-body">
-                        <div class="character-description">${char.description}</div>
-                        <div class="card-footer-tags">
-                            <span class="info-tag">🎂 ${char.birthday}</span>
-                            <span class="info-tag">🏫 ${char.school}</span>
-                            <span class="info-tag" style="color: ${char.color};">● ${char.colorName}</span>
-                        </div>
-                    </div>
-                `;
-                
-                card.addEventListener('click', () => {
-                    showCharacterDetail(unitId, char.name);
+                card.setAttribute('aria-label', t('cardAria', { name: displayName }));
+
+                card.innerHTML =
+                    '<div class="character-card-header">' +
+                        '<div class="character-name-group">' +
+                            '<img class="character-chibi-badge" src="' + char.chibiImg + '" alt="" loading="lazy" decoding="async">' +
+                            '<div class="character-card-name">' + displayName + '</div>' +
+                        '</div>' +
+                        '<div class="character-card-role">' + locRole(char.role) + '</div>' +
+                    '</div>' +
+                    '<div class="character-img-wrap">' +
+                        '<img class="character-image" src="' + char.beforeImg + '" alt="' + t('beforeAlt', { name: displayName }) + '" loading="lazy" decoding="async">' +
+                    '</div>' +
+                    '<div class="character-card-body">' +
+                        '<p class="character-description">' + charText(key, 'description') + '</p>' +
+                        '<div class="card-footer-tags">' +
+                            '<span class="info-tag"><b>' + t('birthdayTag') + '</b>' + locBirthday(char.birthday) + '</span>' +
+                            '<span class="info-tag"><b>' + t('schoolTag') + '</b>' + locSchool(char.school) + '</span>' +
+                            '<span class="info-tag" style="color:' + char.color + ';">● ' + charText(key, 'colorName') + '</span>' +
+                        '</div>' +
+                    '</div>';
+
+                card.addEventListener('click', function () {
+                    openDetail(unitId, key);
                 });
-                card.addEventListener('keydown', (event) => {
+                card.addEventListener('keydown', function (event) {
                     if (event.key === 'Enter' || event.key === ' ') {
                         event.preventDefault();
-                        showCharacterDetail(unitId, char.name);
+                        openDetail(unitId, key);
                     }
                 });
-                characterContainer.appendChild(card);
+
+                container.appendChild(card);
             });
         }
 
-        // 显示组合成员页面
-        function showCharacterModal(unitId) {
-            const unitsModal = document.getElementById('unitsModal');
-            const characterModal = document.getElementById('characterModal');
-            const detailModal = document.getElementById('detailModal');
-
-            renderCharacterModal(unitId);
-
-            unitsModal.style.display = 'none';
-            detailModal.style.display = 'none';
-            characterModal.style.display = 'block';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        // 显示角色个人详情页面
-        function showCharacterDetail(unitId, charName) {
-            const unitsModal = document.getElementById('unitsModal');
-            const characterModal = document.getElementById('characterModal');
-            const detailModal = document.getElementById('detailModal');
-            const tableBody = document.getElementById('detailTableBody');
-            const detailBackButton = document.getElementById('detailBackButton');
+        /* ============================================================
+           角色详情
+           ============================================================ */
+        function renderDetail(unitId, charName) {
             const char = characterDatabase[charName];
-            
-            // 核心修复：更新 currentUnitId 并立即重新准备好该角色所属组合的成员视图
-            // 从而彻底杜绝“跨组合返回上一级时出现旧组合”的错位问题
-            currentUnitId = unitId;
+            const meta = unitMeta[unitId];
+            if (!char || !meta) return;
+
             currentCharacterName = charName;
-            renderCharacterModal(unitId);
 
-            // 更新详情页返回按钮文案
-            detailBackButton.textContent = `← 返回 ${unitMeta[unitId].name} 成员`;
+            const displayName = charText(charName, 'name');
 
-            // 更新头部
-            document.getElementById('detailCharacterName').textContent = char.name + " 详细档案";
-            document.getElementById('detailChibiAvatar').src = char.chibiImg;
-            document.getElementById('detailUnitBadgeText').textContent = char.unit;
-            document.getElementById('detailRoleBadgeText').textContent = char.role;
-            
-            // 纯粹直观展示官方立绘
-            const detailImage = document.getElementById('detailImage');
-            detailImage.src = char.trainedImg;
-            detailImage.alt = char.name + ' 特训后立绘';
+            const back = el('detailBackButton');
+            back.textContent = t('backToMembers');
+            back.setAttribute('aria-label', t('backToMembersAria', { unit: unitName(unitId) }));
 
-            // 构造严格包含用户要求的16项内容的表格数据
-            const tableRows = [
-                ['本名', char.realName],
-                ['生日', char.birthday],
-                ['星座', char.zodiac],
-                ['身高', char.height],
-                ['年龄', char.age],
-                ['发色', char.hairColor],
-                ['瞳色', char.eyeColor],
-                ['爱好', char.hobbies],
-                ['擅长的事情', char.specialty],
-                ['不擅长的事情', char.weakness],
-                ['喜欢的食物', char.favFood],
-                ['不喜欢的食物', char.dislikedFood],
-                ['学校', char.school],
-                ['学年与班级', char.gradeClass],
-                ['所属团体', char.unit],
-                ['代表色', `
-                    <div class="color-badge-container">
-                        <span class="color-swatch" style="background-color: ${char.color};"></span>
-                        <span class="color-hex">${char.color}</span>
-                        <span>(${char.colorName})</span>
-                    </div>
-                `],
-                ['主要担当／定位', char.role],
-                ['角色简介', char.description]
+            el('detailCharacterName').textContent = t('profileOf', { name: displayName });
+
+            const avatar = el('detailChibiAvatar');
+            avatar.src = char.chibiImg;
+            avatar.alt = t('chibiAlt', { name: displayName });
+
+            el('detailUnitBadgeText').textContent = unitName(unitId);
+            el('detailRoleBadgeText').textContent = locRole(char.role);
+
+            const image = el('detailImage');
+            image.src = char.trainedImg;
+            image.alt = t('illustrationAlt', { name: displayName });
+
+            const colorName = charText(charName, 'colorName');
+            const colorText = currentLang === 'en' ? ' (' + colorName + ')' : '（' + colorName + '）';
+
+            const rows = [
+                [t('rowName'), charText(charName, 'realName'), false],
+                [t('rowBirthday'), locBirthday(char.birthday), false],
+                [t('rowZodiac'), locZodiac(char.zodiac), false],
+                [t('rowHeight'), char.height, false],
+                [t('rowAge'), locAge(char.age), false],
+                [t('rowHair'), charText(charName, 'hairColor'), false],
+                [t('rowEyes'), charText(charName, 'eyeColor'), false],
+                [t('rowHobbies'), charText(charName, 'hobbies'), false],
+                [t('rowSpecialty'), charText(charName, 'specialty'), false],
+                [t('rowWeakness'), charText(charName, 'weakness'), false],
+                [t('rowFavFood'), charText(charName, 'favFood'), false],
+                [t('rowDislikeFood'), charText(charName, 'dislikedFood'), false],
+                [t('rowSchool'), locSchool(char.school), false],
+                [t('rowGrade'), locGrade(char.gradeClass), false],
+                [t('rowUnit'), unitName(unitId), false],
+                [t('rowColor'), '<div class="color-badge-container">' +
+                    '<span class="color-swatch" style="background-color:' + char.color + ';"></span>' +
+                    '<span class="color-hex">' + char.color + '</span>' +
+                    '<span>' + colorText + '</span></div>', true],
+                [t('rowRole'), locRole(char.role), false],
+                [t('rowDesc'), charText(charName, 'description'), false]
             ];
 
-            tableBody.innerHTML = '';
-            tableRows.forEach(rowInfo => {
+            const tbody = el('detailTableBody');
+            tbody.innerHTML = '';
+
+            rows.forEach(function (row) {
                 const tr = document.createElement('tr');
                 const th = document.createElement('th');
                 th.scope = 'row';
-                th.textContent = rowInfo[0];
-                
+                th.textContent = row[0];
+
                 const td = document.createElement('td');
-                if (rowInfo[0] === '代表色') {
-                    td.innerHTML = rowInfo[1];
+                if (row[2]) {
+                    td.innerHTML = row[1];
                 } else {
-                    td.textContent = rowInfo[1];
+                    td.textContent = row[1];
                 }
-                
-                tr.append(th, td);
-                tableBody.appendChild(tr);
+
+                tr.appendChild(th);
+                tr.appendChild(td);
+                tbody.appendChild(tr);
             });
 
-            // 视频链接设置
-            const listenButton = document.getElementById('listenButton');
-            listenButton.href = char.video;
-            listenButton.setAttribute('aria-label', '在Bilibili聆听' + char.name + '的角色自我介绍');
-            
-            // 刷新应援状态
-            updateCheerStatus();
+            const listen = el('listenButton');
+            listen.href = char.video;
+            listen.setAttribute('aria-label', t('listenAria', { name: displayName }));
 
-            unitsModal.style.display = 'none';
-            characterModal.style.display = 'none';
-            detailModal.style.display = 'block';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            updateCheerStatus();
         }
 
-        // 应援存储键
+        /* ============================================================
+           应援（localStorage 按角色累计）
+           ============================================================ */
         function cheerStorageKey() {
             return 'pjsk-rework-cheer-' + (currentCharacterName || '');
         }
 
         function getCheerCount() {
             try {
-                return Number(localStorage.getItem(cheerStorageKey()) || 0);
-            } catch (e) {
+                return Number(localStorage.getItem(cheerStorageKey()) || 0) || 0;
+            } catch (error) {
                 return 0;
             }
         }
@@ -2027,111 +3346,326 @@
         function updateCheerStatus() {
             if (!currentCharacterName) return;
             const count = getCheerCount();
-            const statusEl = document.getElementById('cheerStatus');
-            statusEl.textContent = count > 0 
-                ? `已为 ${currentCharacterName} 送出 ${count} 次心意应援！✨`
-                : `点击上方粉色按钮，为 ${currentCharacterName} 送上一份应援吧！💫`;
+            const displayName = charText(currentCharacterName, 'name');
+            const status = el('cheerStatus');
+            status.textContent = count > 0
+                ? t('cheerCount', { name: displayName, n: count })
+                : t('cheerPrompt', { name: displayName });
         }
 
         function cheerForCharacter() {
             if (!currentCharacterName) return;
+
             const nextCount = getCheerCount() + 1;
             try {
                 localStorage.setItem(cheerStorageKey(), String(nextCount));
-            } catch (e) {}
+            } catch (error) {
+                /* 隐私模式下写入失败时忽略，界面仍然给出反馈 */
+            }
 
-            const statusEl = document.getElementById('cheerStatus');
-            statusEl.textContent = `🎉 太棒了！已成功送出第 ${nextCount} 份应援给 ${currentCharacterName}！`;
+            el('cheerStatus').textContent = t('cheerSent', {
+                name: charText(currentCharacterName, 'name'),
+                n: nextCount
+            });
 
-            // 按钮动效反馈
-            const cheerBtn = document.getElementById('cheerButton');
-            cheerBtn.style.transform = 'scale(1.08)';
-            setTimeout(() => {
-                cheerBtn.style.transform = '';
+            const button = el('cheerButton');
+            button.style.transform = 'scale(1.08)';
+            window.setTimeout(function () {
+                button.style.transform = '';
             }, 180);
         }
 
-        // 统一的多级返回上一级逻辑
-        function returnToUpperLevel() {
-            const unitsModal = document.getElementById('unitsModal');
-            const characterModal = document.getElementById('characterModal');
-            const detailModal = document.getElementById('detailModal');
+        /* ============================================================
+           搜索
+           ============================================================ */
+        function runSearch() {
+            const input = el('characterSearch');
+            const clearBtn = el('clearSearchBtn');
+            const panel = el('searchSuggestions');
+            const chips = el('searchChips');
+            const empty = el('searchEmpty');
+            const title = el('searchSuggestionsTitle');
 
-            if (detailModal.style.display === 'block') {
-                // 从角色详情返回至该角色所属组合的成员列表
-                detailModal.style.display = 'none';
-                if (currentUnitId) {
-                    renderCharacterModal(currentUnitId);
+            const raw = input.value.trim();
+            clearBtn.style.display = raw ? 'flex' : 'none';
+
+            document.querySelectorAll('.unit-card').forEach(function (card) {
+                card.classList.remove('highlighted');
+            });
+            chips.innerHTML = '';
+            empty.hidden = true;
+            panel.style.display = 'none';
+
+            if (!raw) {
+                title.textContent = t('suggestionsIdle');
+                return;
+            }
+
+            const term = normalize(raw);
+            if (!term) return;
+
+            const matched = searchIndex.filter(function (item) {
+                return item.text.indexOf(term) !== -1;
+            });
+
+            panel.style.display = 'block';
+
+            if (!matched.length) {
+                title.textContent = t('noMatchTitle');
+                empty.innerHTML = t('noMatchBody');
+                empty.hidden = false;
+                return;
+            }
+
+            const unitIds = [];
+            matched.forEach(function (item) {
+                if (unitIds.indexOf(item.char.unitId) === -1) {
+                    unitIds.push(item.char.unitId);
                 }
-                characterModal.style.display = 'block';
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            } else if (characterModal.style.display === 'block') {
-                // 从组合成员列表返回至组合总览主界面
-                characterModal.style.display = 'none';
-                unitsModal.style.display = 'block';
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+
+            unitIds.forEach(function (unitId) {
+                const card = document.querySelector('.unit-card[data-unit="' + unitId + '"]');
+                if (card) card.classList.add('highlighted');
+            });
+
+            title.textContent = t('matchCount', { n: matched.length }) +
+                (unitIds.length > 1 ? t('matchSpread', { m: unitIds.length }) : '') +
+                t('matchHint');
+
+            matched.forEach(function (item) {
+                const chip = document.createElement('button');
+                chip.type = 'button';
+                chip.className = 'search-chip';
+                chip.innerHTML =
+                    '<img src="' + item.char.chibiImg + '" alt="" loading="lazy" decoding="async">' +
+                    '<span>' + charText(item.key, 'name') + '</span>' +
+                    '<span class="chip-unit">' + unitShort(item.char.unitId) + '</span>';
+                chip.addEventListener('click', function () {
+                    openDetail(item.char.unitId, item.key);
+                });
+                chips.appendChild(chip);
+            });
+        }
+
+        /* ============================================================
+           语言切换：刷新静态文案，并重绘当前视图
+           ============================================================ */
+        function applyChrome() {
+            document.documentElement.lang = t('htmlLang');
+            document.title = t('docTitle');
+
+            document.querySelector('.main-title').textContent = t('appTitle');
+            document.querySelector('.subtitle').textContent = t('subtitle');
+
+            const originalTitle = t('originalTitle');
+            const subtitleNote = document.querySelector('.subtitle-note');
+            if (originalTitle) {
+                subtitleNote.hidden = false;
+                subtitleNote.textContent = originalTitle;
             } else {
-                // 若已在主界面，清空搜索内容
-                const searchInput = document.getElementById('characterSearch');
-                if (searchInput && searchInput.value) {
-                    searchInput.value = '';
-                    searchCharacter();
+                subtitleNote.hidden = true;
+            }
+
+            const input = el('characterSearch');
+            input.placeholder = t('searchPlaceholder');
+            input.setAttribute('aria-label', t('searchAria'));
+
+            const clearBtn = el('clearSearchBtn');
+            clearBtn.title = t('clearSearch');
+            clearBtn.setAttribute('aria-label', t('clearSearch'));
+
+            el('hintLabel').textContent = t('hintLabel');
+            el('searchEmpty').innerHTML = t('noMatchBody');
+
+            document.querySelectorAll('.hint-tag').forEach(function (tag) {
+                tag.textContent = charText(tag.getAttribute('data-kw'), 'name');
+            });
+
+            document.querySelectorAll('.unit-card').forEach(function (card) {
+                const unitId = card.getAttribute('data-unit');
+                card.querySelector('.unit-name-text').textContent = unitName(unitId);
+                card.querySelector('.unit-badge').textContent = unitBadge(unitId);
+                card.querySelector('.preview-title > span').textContent = t('lineup');
+                card.querySelector('.unit-open-btn').textContent = t('viewMembers');
+                card.querySelector('.unit-match-flag').textContent = t('matchFlag');
+
+                const jp = card.querySelector('.unit-name-jp');
+                if (jp) {
+                    if (currentLang === 'ja') {
+                        jp.hidden = true;
+                    } else {
+                        jp.hidden = false;
+                        jp.textContent = (UNIT_I18N.ja[unitId] && UNIT_I18N.ja[unitId].name) || '';
+                    }
                 }
+            });
+
+            document.querySelectorAll('.preview-chibi-item').forEach(function (button) {
+                const key = button.getAttribute('data-char');
+                const label = button.querySelector('.preview-chibi-name');
+                if (label) label.textContent = charShort(key);
+                button.setAttribute('aria-label', t('chibiAria', { name: charText(key, 'name') }));
+            });
+
+            document.querySelectorAll('.footer').forEach(function (footer, index) {
+                footer.innerHTML = index === 0 ? t('footerMain') : t('footerModal');
+            });
+
+            el('unitBackButton').textContent = t('backToUnits');
+            el('unitSubtitleHint').textContent = t('unitHint');
+            el('detailBackButton').textContent = t('backToMembers');
+
+            const sectionTitle = document.querySelector('.table-section-title');
+            if (sectionTitle) sectionTitle.textContent = t('sectionTitle');
+            const detailNote = document.querySelector('.detail-note');
+            if (detailNote) detailNote.textContent = t('detailNote');
+
+            el('cheerButton').innerHTML = '<span aria-hidden="true">💖</span> ' + t('cheer');
+            el('listenButton').innerHTML = '<span aria-hidden="true">🎙️</span> ' + t('listen');
+
+            el('langSwitch').setAttribute('aria-label', t('langLabel'));
+            document.querySelectorAll('.lang-btn').forEach(function (button) {
+                button.setAttribute('aria-pressed',
+                    button.getAttribute('data-lang') === currentLang ? 'true' : 'false');
+            });
+
+            if (currentView.type === 'unit') {
+                renderCharacterList(currentView.unitId);
+            } else if (currentView.type === 'detail') {
+                renderDetail(currentView.unitId, currentView.charName);
+            } else {
+                runSearch();
             }
         }
 
-        // 页面就绪后初始化事件绑定
-        document.addEventListener('DOMContentLoaded', () => {
-            const unitsModal = document.getElementById('unitsModal');
-            const searchInput = document.getElementById('characterSearch');
-            const clearSearchBtn = document.getElementById('clearSearchBtn');
+        function setLang(lang) {
+            if (SUPPORTED_LANGS.indexOf(lang) === -1 || lang === currentLang) return;
+            currentLang = lang;
+            try {
+                localStorage.setItem(LANG_KEY, lang);
+            } catch (error) {
+                /* 隐私模式下忽略 */
+            }
+            applyChrome();
+        }
 
-            // 组合卡片点击
-            document.querySelectorAll('.unit-card').forEach(card => {
-                card.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    showCharacterModal(this.getAttribute('data-unit'));
+        /* ============================================================
+           事件绑定
+           ============================================================ */
+        document.addEventListener('DOMContentLoaded', function () {
+            const input = el('characterSearch');
+
+            /* 组合卡片：整卡点击（内部按钮自行处理） */
+            document.querySelectorAll('.unit-card').forEach(function (card) {
+                card.addEventListener('click', function (event) {
+                    if (event.target.closest('button')) return;
+                    openUnit(card.getAttribute('data-unit'));
                 });
-                card.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        showCharacterModal(this.getAttribute('data-unit'));
+            });
+
+            /* 组合卡片内的「查看成员」按钮 */
+            document.querySelectorAll('.unit-open-btn').forEach(function (button) {
+                button.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                    const card = button.closest('.unit-card');
+                    if (card) openUnit(card.getAttribute('data-unit'));
+                });
+            });
+
+            /* 组合卡片内的 Q 版头像：直达该角色 */
+            document.querySelectorAll('.preview-chibi-item').forEach(function (button) {
+                button.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                    const card = button.closest('.unit-card');
+                    const charName = button.getAttribute('data-char');
+                    if (card && charName) {
+                        openDetail(card.getAttribute('data-unit'), charName);
                     }
                 });
             });
 
-            // 搜索监听
-            searchInput.addEventListener('input', searchCharacter);
-            clearSearchBtn.addEventListener('click', () => {
-                searchInput.value = '';
-                searchCharacter();
-                searchInput.focus();
+            /* 搜索 */
+            input.addEventListener('input', runSearch);
+
+            /* 回车：把命中的第一个组合滚到视野中央（避免输入过程中页面乱跳） */
+            input.addEventListener('keydown', function (event) {
+                if (event.key !== 'Enter') return;
+                const firstCard = document.querySelector('.unit-card.highlighted');
+                if (firstCard) {
+                    event.preventDefault();
+                    firstCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
             });
 
-            // 快捷提示标签点击
-            document.querySelectorAll('.hint-tag').forEach(tag => {
-                tag.addEventListener('click', function() {
-                    searchInput.value = this.getAttribute('data-kw');
-                    searchCharacter();
+            el('clearSearchBtn').addEventListener('click', function () {
+                input.value = '';
+                runSearch();
+                input.focus();
+            });
+
+            document.querySelectorAll('.hint-tag').forEach(function (tag) {
+                tag.addEventListener('click', function () {
+                    input.value = charText(tag.getAttribute('data-kw'), 'name');
+                    runSearch();
+                    input.focus();
                 });
             });
 
-            // 右上角全局固定关闭按钮
-            document.getElementById('globalCloseBtn').addEventListener('click', returnToUpperLevel);
+            /* 返回 */
+            el('globalCloseBtn').addEventListener('click', goBack);
+            el('unitBackButton').addEventListener('click', goBack);
+            el('detailBackButton').addEventListener('click', goBack);
 
-            // 弹窗内的显式返回按钮
-            document.getElementById('unitBackButton').addEventListener('click', returnToUpperLevel);
-            document.getElementById('detailBackButton').addEventListener('click', returnToUpperLevel);
-
-            // 应援按钮
-            document.getElementById('cheerButton').addEventListener('click', cheerForCharacter);
-
-            // 键盘快捷键 Escape
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') {
-                    returnToUpperLevel();
+            /* Esc：优先回退视图；已在总览时清空搜索 */
+            document.addEventListener('keydown', function (event) {
+                if (event.key !== 'Escape' || event.isComposing) return;
+                if (goBack()) {
+                    event.preventDefault();
+                    return;
+                }
+                if (input.value) {
+                    input.value = '';
+                    runSearch();
+                    input.focus();
                 }
             });
+
+            /* 应援 */
+            el('cheerButton').addEventListener('click', cheerForCharacter);
+
+            /* 图片兜底：加载失败时给出可辨认的占位样式 */
+            function markImageBroken(node) {
+                if (!node || node.tagName !== 'IMG' || node.dataset.fallback === '1') return;
+                if (!node.getAttribute('src')) return;   /* 尚未赋值 src 的占位 img 不算失败 */
+                node.dataset.fallback = '1';
+                node.classList.add('img-missing');
+                const label = node.getAttribute('alt') || '图片';
+                node.setAttribute('alt', label + '（加载失败）');
+            }
+
+            document.addEventListener('error', function (event) {
+                markImageBroken(event.target);
+            }, true);
+
+            /* 脚本执行前就已失败的图片（error 事件已错过） */
+            document.querySelectorAll('img').forEach(function (img) {
+                if (img.complete && img.naturalWidth === 0) {
+                    markImageBroken(img);
+                }
+            });
+
+            /* 语言切换 */
+            document.querySelectorAll('.lang-btn').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    setLang(button.getAttribute('data-lang'));
+                });
+            });
+
+            el('globalCloseBtn').classList.remove('is-visible');
+
+            /* 首次渲染：按当前语言（含 localStorage 记忆）刷新静态文案 */
+            applyChrome();
         });
     </script>
 </body>
